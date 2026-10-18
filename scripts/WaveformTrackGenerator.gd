@@ -8,6 +8,8 @@ signal goal_reached()
 const SEGMENT_LENGTH: float = 12.0
 const LANE_WIDTH: float = 1.8
 const TRACK_WIDTH: float = 6.2
+const CURB_WIDTH: float = 0.5
+const CURB_HEIGHT: float = 0.4
 const BASE_SPEED: float = 18.0
 
 var track_data: Dictionary = {}
@@ -59,6 +61,7 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 	var current_dir = Vector3(0, 0, -1) # Facing -Z (Godot forward)
 	var last_turn_segment = -10
 	var turn_dir_alternator = 1
+	var prev_was_turn = false
 
 	for seg_idx in range(segment_count):
 		var time_sec = seg_idx * (SEGMENT_LENGTH / BASE_SPEED)
@@ -115,7 +118,7 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 		seg_node.rotation.y = angle
 
 		# Build visual roadway mesh & collisions
-		_build_segment_mesh(seg_node, is_turn, is_t_junction, turn_left, turn_right)
+		_build_segment_mesh(seg_node, is_turn, is_t_junction, turn_left, turn_right, prev_was_turn)
 
 		var junction_pos = current_pos + current_dir * SEGMENT_LENGTH
 
@@ -140,24 +143,46 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 			var rot_y = -PI * 0.5 if turn_right else PI * 0.5
 			current_pos = junction_pos
 			current_dir = current_dir.rotated(Vector3.UP, rot_y).normalized()
+			prev_was_turn = true
 		else:
 			current_pos = junction_pos
+			prev_was_turn = false
 
 	emit_signal("track_built", total_distance, segment_count)
 
-func _build_segment_mesh(parent: Node3D, is_turn: bool, _is_t_junction: bool, left: bool, right: bool) -> void:
+func _add_curb(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+	var curb = MeshInstance3D.new()
+	var c_mesh = BoxMesh.new()
+	c_mesh.size = size
+	c_mesh.material = mat_stone
+	curb.mesh = c_mesh
+	curb.position = pos
+	parent.add_child(curb)
+
+func _build_segment_mesh(parent: Node3D, is_turn: bool, is_t_junction: bool, left: bool, right: bool, prev_was_turn: bool = false) -> void:
 	# Main roadway box (StaticBody3D + CollisionShape3D + MeshInstance3D)
 	var body = StaticBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 1
 	parent.add_child(body)
 
+	var half_width = TRACK_WIDTH * 0.5
+	var curb_offset = half_width - CURB_WIDTH * 0.5
+	var curb_y = CURB_HEIGHT * 0.5
+	var j_z = -SEGMENT_LENGTH
+
+	# Straight section boundaries
+	var straight_start_z = -half_width if prev_was_turn else 0.0
+	var straight_end_z = (j_z + half_width) if is_turn else -SEGMENT_LENGTH
+	var straight_len = straight_start_z - straight_end_z
+	var straight_center_z = (straight_start_z + straight_end_z) * 0.5
+
 	# Main straight slab
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(TRACK_WIDTH, 1.0, SEGMENT_LENGTH)
+	box.size = Vector3(TRACK_WIDTH, 1.0, straight_len)
 	col.shape = box
-	col.position = Vector3(0, -0.5, -SEGMENT_LENGTH * 0.5)
+	col.position = Vector3(0, -0.5, straight_center_z)
 	body.add_child(col)
 
 	var mesh_inst = MeshInstance3D.new()
@@ -168,24 +193,18 @@ func _build_segment_mesh(parent: Node3D, is_turn: bool, _is_t_junction: bool, le
 	mesh_inst.position = col.position
 	body.add_child(mesh_inst)
 
-	# Side stone curbstones
+	# Side stone curbstones along straight section
 	for side in [-1, 1]:
-		var curb = MeshInstance3D.new()
-		var c_mesh = BoxMesh.new()
-		c_mesh.size = Vector3(0.5, 0.4, SEGMENT_LENGTH)
-		c_mesh.material = mat_stone
-		curb.mesh = c_mesh
-		curb.position = Vector3(side * (TRACK_WIDTH * 0.5 - 0.25), 0.2, -SEGMENT_LENGTH * 0.5)
-		body.add_child(curb)
+		_add_curb(body, Vector3(side * curb_offset, curb_y, straight_center_z), Vector3(CURB_WIDTH, CURB_HEIGHT, straight_len))
 
-	# If corner or T-junction, add solid square intersection platform and side branch slabs
+	# If corner or T-junction, add solid square intersection platform and seamless junction curbstones
 	if is_turn:
 		# Center intersection square at end of segment
 		var j_col = CollisionShape3D.new()
 		var j_box = BoxShape3D.new()
 		j_box.size = Vector3(TRACK_WIDTH, 1.0, TRACK_WIDTH)
 		j_col.shape = j_box
-		j_col.position = Vector3(0, -0.5, -SEGMENT_LENGTH)
+		j_col.position = Vector3(0, -0.5, j_z)
 		body.add_child(j_col)
 
 		var j_mesh = MeshInstance3D.new()
@@ -196,13 +215,33 @@ func _build_segment_mesh(parent: Node3D, is_turn: bool, _is_t_junction: bool, le
 		j_mesh.position = j_col.position
 		body.add_child(j_mesh)
 
-		if left:
+		# 1. Back wall curb: closes off the forward path (dead end) facing the incoming runner
+		_add_curb(body, Vector3(0.0, curb_y, j_z - curb_offset), Vector3(TRACK_WIDTH, CURB_HEIGHT, CURB_WIDTH))
+
+		# 2. Side walls & Inner corners:
+		if left and not right:
+			# Single LEFT turn:
+			# Left side is inner corner: square flush corner block connecting to outgoing inner curb
+			_add_curb(body, Vector3(-curb_offset, curb_y, j_z + curb_offset), Vector3(CURB_WIDTH, CURB_HEIGHT, CURB_WIDTH))
+			# Right side is outer wall: continuous wall enclosing the outer perimeter
+			_add_curb(body, Vector3(curb_offset, curb_y, j_z), Vector3(CURB_WIDTH, CURB_HEIGHT, TRACK_WIDTH))
+
+		elif right and not left:
+			# Single RIGHT turn:
+			# Right side is inner corner: square flush corner block connecting to outgoing inner curb
+			_add_curb(body, Vector3(curb_offset, curb_y, j_z + curb_offset), Vector3(CURB_WIDTH, CURB_HEIGHT, CURB_WIDTH))
+			# Left side is outer wall: continuous wall enclosing the outer perimeter
+			_add_curb(body, Vector3(-curb_offset, curb_y, j_z), Vector3(CURB_WIDTH, CURB_HEIGHT, TRACK_WIDTH))
+
+		else:
+			# T-Junction: both left and right are open branches
+			_add_curb(body, Vector3(-curb_offset, curb_y, j_z + curb_offset), Vector3(CURB_WIDTH, CURB_HEIGHT, CURB_WIDTH))
+			_add_curb(body, Vector3(curb_offset, curb_y, j_z + curb_offset), Vector3(CURB_WIDTH, CURB_HEIGHT, CURB_WIDTH))
 			_add_turn_arm(body, -1)
-		if right:
 			_add_turn_arm(body, 1)
 
 	# Prop: Torii Arch on straight paths periodically
-	if not is_turn and (parent.name.ends_with("4") or parent.name.ends_with("8")):
+	if not is_turn and not prev_was_turn and (parent.name.ends_with("4") or parent.name.ends_with("8")):
 		var arch_scene = load("res://assets/models/env_shrine_arch.glb")
 		if arch_scene:
 			var arch = arch_scene.instantiate()
