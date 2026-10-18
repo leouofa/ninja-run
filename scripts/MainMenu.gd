@@ -153,12 +153,16 @@ func _populate_high_scores() -> void:
 	for i in range(levels.size()):
 		var item = levels[i]
 		var row = PanelContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var h_box = HBoxContainer.new()
+		h_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h_box.add_theme_constant_override("separation", 15)
 
 		# Index / Title
 		var title_lbl = Label.new()
-		title_lbl.custom_minimum_size = Vector2(340, 40)
+		title_lbl.custom_minimum_size = Vector2(250, 40)
+		title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title_lbl.size_flags_stretch_ratio = 4.0
 		title_lbl.clip_text = true
 		title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var is_comp = gm.save_data.get("completed_tracks", []).has(item["filename"])
@@ -171,7 +175,9 @@ func _populate_high_scores() -> void:
 		var dur_lbl = Label.new()
 		var m = int(floor(item["duration"] / 60.0))
 		var s = int(item["duration"]) % 60
-		dur_lbl.custom_minimum_size = Vector2(70, 40)
+		dur_lbl.custom_minimum_size = Vector2(65, 40)
+		dur_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dur_lbl.size_flags_stretch_ratio = 1.0
 		dur_lbl.text = "%02d:%02d" % [m, s]
 		dur_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(dur_lbl)
@@ -179,8 +185,10 @@ func _populate_high_scores() -> void:
 		# High Score
 		var hs = gm.get_high_score(item["filename"])
 		var hs_lbl = Label.new()
-		hs_lbl.custom_minimum_size = Vector2(150, 40)
-		hs_lbl.text = "Score: %d" % hs
+		hs_lbl.custom_minimum_size = Vector2(110, 40)
+		hs_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hs_lbl.size_flags_stretch_ratio = 1.8
+		hs_lbl.text = str(hs) if hs > 0 else "—"
 		hs_lbl.modulate = Color(0.4, 1.0, 0.5) if hs > 0 else Color(0.55, 0.55, 0.6)
 		hs_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(hs_lbl)
@@ -188,15 +196,19 @@ func _populate_high_scores() -> void:
 		# Max Kills
 		var kills = gm.get_max_kills(item["filename"])
 		var kills_lbl = Label.new()
-		kills_lbl.custom_minimum_size = Vector2(130, 40)
-		kills_lbl.text = "⚔ %d Kills" % kills
+		kills_lbl.custom_minimum_size = Vector2(95, 40)
+		kills_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		kills_lbl.size_flags_stretch_ratio = 1.5
+		kills_lbl.text = str(kills) if kills > 0 else "—"
 		kills_lbl.modulate = Color(1.0, 0.45, 0.3) if kills > 0 else Color(0.55, 0.55, 0.6)
 		kills_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(kills_lbl)
 
 		# Completion Status
 		var status_lbl = Label.new()
-		status_lbl.custom_minimum_size = Vector2(140, 40)
+		status_lbl.custom_minimum_size = Vector2(120, 40)
+		status_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		status_lbl.size_flags_stretch_ratio = 1.7
 		if is_comp:
 			status_lbl.text = "Torii Cleared"
 			status_lbl.modulate = Color(0.3, 0.9, 1.0)
@@ -210,19 +222,6 @@ func _populate_high_scores() -> void:
 				status_lbl.modulate = Color(0.5, 0.5, 0.55)
 		status_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(status_lbl)
-
-		# Play Button
-		var play_btn = Button.new()
-		play_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		play_btn.text = "Play"
-		play_btn.pressed.connect(func():
-			if audio_preview_player.playing:
-				audio_preview_player.stop()
-			var m_gm = _get_gm()
-			if m_gm:
-				m_gm.start_level_by_name(item["filename"])
-		)
-		h_box.add_child(play_btn)
 
 		row.add_child(h_box)
 		high_score_list_container.add_child(row)

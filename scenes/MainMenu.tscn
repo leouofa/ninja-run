@@ -158,8 +158,73 @@ theme_override_font_sizes/font_size = 26
 text = "HIGH SCORES & RECORDS"
 horizontal_alignment = 1
 
+[node name="TopSpacer" type="Control" parent="MarginContainer/HighScoresScreen"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/HighScoresScreen"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/HighScoresScreen/TableHeaders"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="ColTrack" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(250, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "TRACK"
+vertical_alignment = 1
+
+[node name="ColTime" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(65, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "TIME"
+vertical_alignment = 1
+
+[node name="ColScore" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.8
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "HIGH SCORE"
+vertical_alignment = 1
+
+[node name="ColKills" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(95, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "MAX KILLS"
+vertical_alignment = 1
+
+[node name="ColStatus" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.7
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "STATUS"
+vertical_alignment = 1
+
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HighScoresScreen"]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="HighScoreList" type="VBoxContainer" parent="MarginContainer/HighScoresScreen/ScrollContainer"]

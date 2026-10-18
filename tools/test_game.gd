@@ -277,20 +277,37 @@ func _init() -> void:
 	var exit_btn = menu.get_node_or_null("MarginContainer/TitleScreen/ExitBtn")
 	var hs_btn = menu.get_node_or_null("MarginContainer/TitleScreen/HighScoresBtn")
 	var hs_screen = menu.get_node_or_null("MarginContainer/HighScoresScreen")
+	var hs_headers = menu.get_node_or_null("MarginContainer/HighScoresScreen/TableHeaders")
 	var hs_list = menu.get_node_or_null("MarginContainer/HighScoresScreen/ScrollContainer/HighScoreList")
 
-	if lvl_btn and exit_btn and hs_btn and hs_screen and hs_list:
+	if lvl_btn and exit_btn and hs_btn and hs_screen and hs_headers and hs_list:
 		var labels_ok = (lvl_btn.text == "Select Level") and exit_btn.text.begins_with("Exit")
 		menu._on_high_scores_pressed()
 		var items_count = hs_list.get_child_count()
-		if labels_ok and hs_screen.visible and not menu.title_screen.visible and items_count == 36:
-			print("[PASS] MainMenu UI verified: 'Select Level' label, Exit button, and High Scores screen (%d tracks)." % items_count)
+
+		# Check that rows have no Play buttons and no inline 'Score:' or 'Kills:' text
+		var no_play_buttons = true
+		var clean_counters = true
+		for row in hs_list.get_children():
+			var hbox = row.get_child(0) if row.get_child_count() > 0 else null
+			if hbox:
+				for child in hbox.get_children():
+					if child is Button:
+						no_play_buttons = false
+					if child is Label:
+						if "Score:" in child.text or "Kills:" in child.text:
+							clean_counters = false
+
+		if labels_ok and hs_screen.visible and not menu.title_screen.visible and items_count == 36 and no_play_buttons and clean_counters:
+			print("[PASS] MainMenu UI verified: table headers, clean numeric counters, no play buttons, %d tracks." % items_count)
 			passed += 1
 		else:
-			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, visible=%s, items=%d)" % [labels_ok, hs_screen.visible, items_count])
+			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, visible=%s, items=%d, no_buttons=%s, clean_counters=%s)" % [
+				labels_ok, hs_screen.visible, items_count, no_play_buttons, clean_counters
+			])
 			failed += 1
 	else:
-		print("[FAIL] MainMenu missing expected buttons or HighScoresScreen nodes.")
+		print("[FAIL] MainMenu missing expected buttons, headers, or HighScoresScreen nodes.")
 		failed += 1
 
 	menu.queue_free()
