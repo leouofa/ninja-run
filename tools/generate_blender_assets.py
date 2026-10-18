@@ -440,14 +440,14 @@ def build_barricade():
     m_wood = create_material("M_ObstacleWood", (0.35, 0.22, 0.14, 1.0), roughness=0.8)
     m_spike = create_material("M_SpikeBamboo", (0.6, 0.55, 0.3, 1.0), roughness=0.5)
 
-    # Horizontal beam across single lane (width 1.8m, height 0.45m)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=1.8, location=(0, 0, 0.35))
+    # Horizontal beam across single lane (width 2.4m, height 0.45m)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=2.4, location=(0, 0, 0.35))
     beam = bpy.context.active_object
     beam.rotation_euler = (0, math.radians(90), 0)
     assign_material(beam, m_wood)
 
-    # Crossed bamboo stakes
-    for x in [-0.6, -0.2, 0.2, 0.6]:
+    # Crossed bamboo stakes evenly spaced across lane
+    for x in [-0.9, -0.5, -0.15, 0.15, 0.5, 0.9]:
         bpy.ops.mesh.primitive_cylinder_add(radius=0.05, depth=0.85, location=(x, 0, 0.35))
         stake = bpy.context.active_object
         stake.rotation_euler = (math.radians(25 if x < 0 else -25), 0, 0)
@@ -461,20 +461,20 @@ def build_high_gate():
     m_paper = create_material("M_OfudaPaper", (0.9, 0.9, 0.85, 1.0), roughness=0.4)
     m_red = create_material("M_OfudaRed", (0.8, 0.1, 0.1, 1.0), roughness=0.5)
 
-    # High crossbeam (height 1.7m - must slide under)
+    # High crossbeam (width 2.4m, height 1.75m - must slide under)
     bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 1.75))
     beam = bpy.context.active_object
-    beam.scale = (2.2, 0.25, 0.25)
+    beam.scale = (2.4, 0.25, 0.25)
     assign_material(beam, m_wood)
 
-    # Side support poles
-    for x in [-1.0, 1.0]:
+    # Side support poles (spanning 2.24m, strictly inside single 3.6m lane)
+    for x in [-1.12, 1.12]:
         bpy.ops.mesh.primitive_cylinder_add(radius=0.09, depth=2.0, location=(x, 0, 1.0))
         post = bpy.context.active_object
         assign_material(post, m_wood)
 
     # Hanging Ofuda Talismans (Paper banners)
-    for x in [-0.6, -0.2, 0.2, 0.6]:
+    for x in [-0.8, -0.4, 0.0, 0.4, 0.8]:
         bpy.ops.mesh.primitive_cube_add(size=0.1, location=(x, 0, 1.35))
         banner = bpy.context.active_object
         banner.scale = (1.2, 0.1, 4.0)
@@ -523,30 +523,30 @@ def build_shrine_arch():
     m_stone = create_material("M_LanternStone", (0.5, 0.52, 0.55, 1.0), roughness=0.8)
     m_flame = create_material("M_ShrineFire", (1.0, 0.7, 0.1, 1.0), emission_color=(1.0, 0.6, 0.1, 1.0), emission_strength=4.0)
 
-    # Modular Torii arch spanning track (width 6.2m, height 4.2m)
+    # Modular Torii arch spanning widened 12.4m track (width 14m, height 4.8m)
     # Lintels
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 4.0))
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 4.6))
     kasagi = bpy.context.active_object
-    kasagi.scale = (7.0, 0.5, 0.4)
+    kasagi.scale = (14.0, 0.6, 0.5)
     assign_material(kasagi, m_vermilion)
 
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 3.3))
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 3.8))
     nuki = bpy.context.active_object
-    nuki.scale = (6.0, 0.35, 0.3)
+    nuki.scale = (12.5, 0.45, 0.35)
     assign_material(nuki, m_vermilion)
 
-    # Two pillars
-    for x in [-2.7, 2.7]:
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=4.0, location=(x, 0, 2.0))
+    # Two pillars on track outer curb perimeter
+    for x in [-5.8, 5.8]:
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.3, depth=4.6, location=(x, 0, 2.3))
         pillar = bpy.context.active_object
         assign_material(pillar, m_vermilion)
 
         # Stone Toro Lantern beside arch
-        bpy.ops.mesh.primitive_cube_add(size=0.6, location=(x * 1.25, 0, 0.6))
+        bpy.ops.mesh.primitive_cube_add(size=0.7, location=(x * 1.12, 0, 0.6))
         toro = bpy.context.active_object
         assign_material(toro, m_stone)
 
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(x * 1.25, 0, 1.05))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.18, location=(x * 1.12, 0, 1.1))
         fire = bpy.context.active_object
         assign_material(fire, m_flame)
 
@@ -558,25 +558,25 @@ def build_goal_shrine():
     m_vermilion = create_material("M_GoalRed", (0.9, 0.1, 0.05, 1.0), roughness=0.4)
     m_lantern = create_material("M_GoalLantern", (1.0, 0.4, 0.1, 1.0), emission_color=(1.0, 0.5, 0.1, 1.0), emission_strength=4.0)
 
-    # Grand Torii with Golden Cap
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 5.0))
+    # Grand Torii with Golden Cap spanning 12.4m track
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 5.4))
     kasagi = bpy.context.active_object
-    kasagi.scale = (8.5, 0.7, 0.5)
+    kasagi.scale = (15.5, 0.8, 0.6)
     assign_material(kasagi, m_gold)
 
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 4.1))
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 4.4))
     nuki = bpy.context.active_object
-    nuki.scale = (7.5, 0.45, 0.35)
+    nuki.scale = (13.5, 0.55, 0.4)
     assign_material(nuki, m_vermilion)
 
-    for x in [-3.2, 3.2]:
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.35, depth=5.0, location=(x, 0, 2.5))
+    for x in [-6.0, 6.0]:
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.4, depth=5.4, location=(x, 0, 2.7))
         pillar = bpy.context.active_object
         assign_material(pillar, m_vermilion)
 
     # Hanging Golden Bells / Lanterns
-    for x in [-1.8, 0.0, 1.8]:
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.35, location=(x, 0, 3.5))
+    for x in [-4.0, -2.0, 0.0, 2.0, 4.0]:
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.4, location=(x, 0, 3.7))
         bell = bpy.context.active_object
         assign_material(bell, m_lantern)
 

@@ -8,7 +8,8 @@ var visual_mesh: Node3D
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
-	body_entered.connect(_on_body_entered)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
 	_setup()
 
 func _setup() -> void:
@@ -20,12 +21,13 @@ func _setup() -> void:
 			add_child(visual_mesh)
 
 	var col = CollisionShape3D.new()
+	col.name = "CollisionShape3D"
 	var box = BoxShape3D.new()
 	if obstacle_type == "barricade":
-		box.size = Vector3(1.8, 0.7, 0.8) # Low barricade
+		box.size = Vector3(2.4, 0.7, 0.8) # Low barricade spanning single lane (2.4m)
 		col.position = Vector3(0, 0.35, 0)
 	else:
-		box.size = Vector3(2.2, 0.9, 0.8) # High beam / gate
+		box.size = Vector3(2.4, 0.9, 0.8) # High beam / gate spanning single lane (2.4m)
 		col.position = Vector3(0, 1.45, 0)
 	col.shape = box
 	add_child(col)
