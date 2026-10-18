@@ -106,6 +106,30 @@ static func create_stream(type: String) -> AudioStreamWAV:
 				var val = clampi(int(s), -32768, 32767)
 				data.encode_s16(i * 2, val)
 
+		"ui_hover":
+			duration = 0.05
+			var num_samples = int(duration * sample_rate)
+			data.resize(num_samples * 2)
+			for i in range(num_samples):
+				var t = float(i) / float(sample_rate)
+				var env = exp(-t * 35.0)
+				var freq = lerp(880.0, 1320.0, t / duration)
+				var s = sin(t * freq * TAU) * env * 9000.0
+				var val = clampi(int(s), -32768, 32767)
+				data.encode_s16(i * 2, val)
+
+		"ui_click":
+			duration = 0.08
+			var num_samples = int(duration * sample_rate)
+			data.resize(num_samples * 2)
+			for i in range(num_samples):
+				var t = float(i) / float(sample_rate)
+				var env = exp(-t * 28.0)
+				var freq = lerp(900.0, 300.0, t / duration)
+				var s = sin(t * freq * TAU) * env * 16000.0
+				var val = clampi(int(s), -32768, 32767)
+				data.encode_s16(i * 2, val)
+
 		_:
 			duration = 0.2
 			var num_samples = int(duration * sample_rate)

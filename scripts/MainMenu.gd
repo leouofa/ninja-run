@@ -98,13 +98,15 @@ func _populate_levels() -> void:
 
 		# Preview Button
 		var prev_btn = Button.new()
-		prev_btn.text = "▶ Preview"
+		prev_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		prev_btn.text = "Preview"
 		prev_btn.pressed.connect(func(): _toggle_preview(item["path"], item["filename"]))
 		h_box.add_child(prev_btn)
 
 		# Play Button
 		var play_btn = Button.new()
-		play_btn.text = "⚔ Play"
+		play_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		play_btn.text = "Play"
 		play_btn.pressed.connect(func():
 			if audio_preview_player.playing:
 				audio_preview_player.stop()
