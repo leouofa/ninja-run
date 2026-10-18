@@ -127,8 +127,79 @@ theme_override_font_sizes/font_size = 26
 text = "SELECT SOUNDTRACK LEVEL"
 horizontal_alignment = 1
 
+[node name="TopSpacer" type="Control" parent="MarginContainer/LevelSelectScreen"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/LevelSelectScreen"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen/TableHeaders"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="ColTrack" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(200, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "TRACK"
+vertical_alignment = 1
+
+[node name="ColTime" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(60, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.8
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "TIME"
+vertical_alignment = 1
+
+[node name="ColDiff" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(75, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "DIFFICULTY"
+vertical_alignment = 1
+
+[node name="ColRecord" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.4
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "RECORD"
+vertical_alignment = 1
+
+[node name="ColWaveform" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.8
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "ENERGY"
+vertical_alignment = 1
+
+[node name="ColActions" type="Control" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.8
+
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/LevelSelectScreen"]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="LevelList" type="VBoxContainer" parent="MarginContainer/LevelSelectScreen/ScrollContainer"]

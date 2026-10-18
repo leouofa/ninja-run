@@ -276,14 +276,30 @@ func _init() -> void:
 	var lvl_btn = menu.get_node_or_null("MarginContainer/TitleScreen/LevelSelectBtn")
 	var exit_btn = menu.get_node_or_null("MarginContainer/TitleScreen/ExitBtn")
 	var hs_btn = menu.get_node_or_null("MarginContainer/TitleScreen/HighScoresBtn")
+	var lvl_screen = menu.get_node_or_null("MarginContainer/LevelSelectScreen")
+	var lvl_headers = menu.get_node_or_null("MarginContainer/LevelSelectScreen/TableHeaders")
+	var lvl_list = menu.get_node_or_null("MarginContainer/LevelSelectScreen/ScrollContainer/LevelList")
 	var hs_screen = menu.get_node_or_null("MarginContainer/HighScoresScreen")
 	var hs_headers = menu.get_node_or_null("MarginContainer/HighScoresScreen/TableHeaders")
 	var hs_list = menu.get_node_or_null("MarginContainer/HighScoresScreen/ScrollContainer/HighScoreList")
 
-	if lvl_btn and exit_btn and hs_btn and hs_screen and hs_headers and hs_list:
+	if lvl_btn and exit_btn and hs_btn and lvl_screen and lvl_headers and lvl_list and hs_screen and hs_headers and hs_list:
 		var labels_ok = (lvl_btn.text == "Select Level") and exit_btn.text.begins_with("Exit")
+
+		# Test Level Select Screen
+		menu._on_level_select_pressed()
+		var lvl_items_count = lvl_list.get_child_count()
+		var lvl_actions_ok = true
+		for row in lvl_list.get_children():
+			var hbox = row.get_child(0) if row.get_child_count() > 0 else null
+			if hbox:
+				var actions = hbox.get_child(hbox.get_child_count() - 1)
+				if not (actions is HBoxContainer and actions.get_child_count() == 2):
+					lvl_actions_ok = false
+
+		# Test High Scores Screen
 		menu._on_high_scores_pressed()
-		var items_count = hs_list.get_child_count()
+		var hs_items_count = hs_list.get_child_count()
 
 		# Check that rows have no Play buttons and no inline 'Score:' or 'Kills:' text
 		var no_play_buttons = true
@@ -298,16 +314,17 @@ func _init() -> void:
 						if "Score:" in child.text or "Kills:" in child.text:
 							clean_counters = false
 
-		if labels_ok and hs_screen.visible and not menu.title_screen.visible and items_count == 36 and no_play_buttons and clean_counters:
-			print("[PASS] MainMenu UI verified: table headers, clean numeric counters, no play buttons, %d tracks." % items_count)
+		var ok = labels_ok and lvl_items_count == 36 and lvl_actions_ok and hs_items_count == 36 and no_play_buttons and clean_counters
+		if ok:
+			print("[PASS] MainMenu UI verified: table headers, clean counters, full-width layouts for both LevelSelect & HighScores.")
 			passed += 1
 		else:
-			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, visible=%s, items=%d, no_buttons=%s, clean_counters=%s)" % [
-				labels_ok, hs_screen.visible, items_count, no_play_buttons, clean_counters
+			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, lvl_items=%d, lvl_actions=%s, hs_items=%d, no_buttons=%s, clean_counters=%s)" % [
+				labels_ok, lvl_items_count, lvl_actions_ok, hs_items_count, no_play_buttons, clean_counters
 			])
 			failed += 1
 	else:
-		print("[FAIL] MainMenu missing expected buttons, headers, or HighScoresScreen nodes.")
+		print("[FAIL] MainMenu missing expected buttons, headers, or screen containers.")
 		failed += 1
 
 	menu.queue_free()

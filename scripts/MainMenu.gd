@@ -56,12 +56,16 @@ func _populate_levels() -> void:
 	for i in range(levels.size()):
 		var item = levels[i]
 		var row = PanelContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var h_box = HBoxContainer.new()
+		h_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h_box.add_theme_constant_override("separation", 15)
 
 		# Index / Title label
 		var title_lbl = Label.new()
-		title_lbl.custom_minimum_size = Vector2(280, 40)
+		title_lbl.custom_minimum_size = Vector2(200, 40)
+		title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title_lbl.size_flags_stretch_ratio = 3.2
 		title_lbl.clip_text = true
 		title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var is_comp = gm.save_data["completed_tracks"].has(item["filename"])
@@ -74,14 +78,18 @@ func _populate_levels() -> void:
 		var dur_lbl = Label.new()
 		var m = int(floor(item["duration"] / 60.0))
 		var s = int(item["duration"]) % 60
-		dur_lbl.custom_minimum_size = Vector2(70, 40)
+		dur_lbl.custom_minimum_size = Vector2(60, 40)
+		dur_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dur_lbl.size_flags_stretch_ratio = 0.8
 		dur_lbl.text = "%02d:%02d" % [m, s]
 		dur_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(dur_lbl)
 
 		# Difficulty Stars
 		var diff_lbl = Label.new()
-		diff_lbl.custom_minimum_size = Vector2(90, 40)
+		diff_lbl.custom_minimum_size = Vector2(75, 40)
+		diff_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		diff_lbl.size_flags_stretch_ratio = 1.0
 		var stars = ""
 		for star in range(item["difficulty"]):
 			stars += "★"
@@ -94,18 +102,22 @@ func _populate_levels() -> void:
 		var hs = gm.get_high_score(item["filename"])
 		var mk = gm.get_max_kills(item["filename"])
 		var hs_lbl = Label.new()
-		hs_lbl.custom_minimum_size = Vector2(130, 40)
+		hs_lbl.custom_minimum_size = Vector2(90, 40)
+		hs_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hs_lbl.size_flags_stretch_ratio = 1.4
 		if hs > 0 or mk > 0:
-			hs_lbl.text = "High: %d\n⚔ %d kills" % [hs, mk]
+			hs_lbl.text = "%d\n⚔ %d" % [hs, mk]
 		else:
-			hs_lbl.text = "High: 0"
-		hs_lbl.modulate = Color(0.7, 0.9, 1.0)
+			hs_lbl.text = "—"
+		hs_lbl.modulate = Color(0.7, 0.9, 1.0) if hs > 0 else Color(0.55, 0.55, 0.6)
 		hs_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(hs_lbl)
 
 		# Mini Waveform Bar
 		var wf_bar = ProgressBar.new()
-		wf_bar.custom_minimum_size = Vector2(160, 24)
+		wf_bar.custom_minimum_size = Vector2(100, 24)
+		wf_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		wf_bar.size_flags_stretch_ratio = 1.8
 		wf_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		wf_bar.max_value = 1.0
 		wf_bar.show_percentage = false
@@ -118,14 +130,20 @@ func _populate_levels() -> void:
 			wf_bar.value = 0.5
 		h_box.add_child(wf_bar)
 
-		# Preview Button
+		# Actions Box (Preview and Play)
+		var actions_box = HBoxContainer.new()
+		actions_box.custom_minimum_size = Vector2(130, 40)
+		actions_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		actions_box.size_flags_stretch_ratio = 1.8
+		actions_box.alignment = BoxContainer.ALIGNMENT_END
+		actions_box.add_theme_constant_override("separation", 8)
+
 		var prev_btn = Button.new()
 		prev_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		prev_btn.text = "Preview"
 		prev_btn.pressed.connect(func(): _toggle_preview(item["path"], item["filename"]))
-		h_box.add_child(prev_btn)
+		actions_box.add_child(prev_btn)
 
-		# Play Button
 		var play_btn = Button.new()
 		play_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		play_btn.text = "Play"
@@ -136,8 +154,21 @@ func _populate_levels() -> void:
 			if m_gm:
 				m_gm.start_level_by_name(item["filename"])
 		)
-		h_box.add_child(play_btn)
+		actions_box.add_child(play_btn)
 
+		for btn in [prev_btn, play_btn]:
+			btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			for state in ["normal", "hover", "pressed"]:
+				var orig = btn.get_theme_stylebox(state)
+				if orig is StyleBoxFlat:
+					var sb = orig.duplicate()
+					sb.content_margin_top = 2.0
+					sb.content_margin_bottom = 2.0
+					btn.add_theme_stylebox_override(state, sb)
+		prev_btn.custom_minimum_size = Vector2(75, 26)
+		play_btn.custom_minimum_size = Vector2(60, 26)
+
+		h_box.add_child(actions_box)
 		row.add_child(h_box)
 		level_list_container.add_child(row)
 
