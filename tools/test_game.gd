@@ -377,6 +377,41 @@ func _init() -> void:
 		])
 		failed += 1
 
+	# 14. Test Psychedelic Shaders, PostFX, and Entity Ground Halos
+	var test_coin = Pickup.new()
+	test_coin.pickup_type = "koban"
+	root.add_child(test_coin)
+	test_coin._ready()
+
+	var test_enemy = EnemyBase.new()
+	test_enemy.enemy_type = "oni"
+	root.add_child(test_enemy)
+	test_enemy._ready()
+
+	var test_obs = Obstacle.new()
+	test_obs.obstacle_type = "barricade"
+	root.add_child(test_obs)
+	test_obs._ready()
+
+	var coin_shader_ok = (test_coin.shader_mat != null) and (test_coin.ground_ring != null) and (test_coin.contrast_halo != null)
+	var enemy_shader_ok = (test_enemy.shader_mat != null) and (test_enemy.ground_ring != null)
+	var obs_shader_ok = (test_obs.shader_mat != null) and (test_obs.ground_marker != null)
+	var track_shader_ok = (world.track_gen.mat_wood is ShaderMaterial)
+	var postfx_ok = (world.postfx_rect != null) and (world.postfx_rect.material is ShaderMaterial)
+	var bloom_aces_ok = (world.world_env.environment.tonemap_mode == Environment.TONE_MAPPER_ACES) and (world.world_env.environment.glow_bloom >= 0.35)
+
+	if coin_shader_ok and enemy_shader_ok and obs_shader_ok and track_shader_ok and postfx_ok and bloom_aces_ok:
+		print("[PASS] Psychedelic Visual Pipeline verified: Entity shaders, ground beacons, obsidian neon track, PostFX, and ACES HDR bloom.")
+		passed += 1
+	else:
+		print("[FAIL] Psychedelic Pipeline mismatch: coin=%s, enemy=%s, obs=%s, track=%s, postfx=%s, bloom_aces=%s" % [
+			coin_shader_ok, enemy_shader_ok, obs_shader_ok, track_shader_ok, postfx_ok, bloom_aces_ok
+		])
+		failed += 1
+
+	test_coin.queue_free()
+	test_enemy.queue_free()
+	test_obs.queue_free()
 	world.queue_free()
 
 	# Clean test key from save data
