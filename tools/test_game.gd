@@ -327,7 +327,57 @@ func _init() -> void:
 		print("[FAIL] MainMenu missing expected buttons, headers, or screen containers.")
 		failed += 1
 
+	# 12. Test Title Screen Synthwave Shader & Random BGM Playback
+	var menu_bg = menu.get_node_or_null("Background")
+	var menu_bgm = menu.get_node_or_null("BGMPlayer")
+	if menu_bg and menu_bg.material is ShaderMaterial and menu_bgm and menu.current_bgm_track != "" and menu.bgm_tracks.size() == 36:
+		print("[PASS] Title Screen procedural synthwave shader and 36-track random BGM shuffler verified (playing: %s)." % menu.current_bgm_track)
+		passed += 1
+	else:
+		print("[FAIL] Title Screen synthwave shader or BGM shuffler failed to initialize.")
+		failed += 1
+
 	menu.queue_free()
+
+	# 13. Test TrackPaletteGenerator & GameWorld 360° Procedural Level Sky Background
+	var iced_info = {}
+	var arma_info = {}
+	var neon_info = {}
+	for lvl in gm.level_list:
+		if lvl["filename"] == "Iced Out.mp3":
+			iced_info = lvl
+		elif lvl["filename"] == "Armageddon.mp3":
+			arma_info = lvl
+		elif lvl["filename"] == "Pantheon in Neon.mp3":
+			neon_info = lvl
+
+	var pal_iced = TrackPaletteGenerator.generate_palette(iced_info)
+	var pal_arma = TrackPaletteGenerator.generate_palette(arma_info)
+	var pal_neon = TrackPaletteGenerator.generate_palette(neon_info)
+
+	var themes_distinct = (pal_iced["theme"] == "frost") and (pal_arma["theme"] == "inferno") and (pal_neon["theme"] == "cyber")
+	var colors_distinct = (pal_iced["grid_primary_color"] != pal_arma["grid_primary_color"]) and (pal_arma["sky_horizon_color"] != pal_neon["sky_horizon_color"])
+
+	var world_scene = load("res://scenes/GameWorld.tscn")
+	var world = world_scene.instantiate()
+	gm.current_track_name = "Armageddon.mp3"
+	root.add_child(world)
+	world._ready()
+	world._update_reactive_background(0.1)
+
+	var sky_ok = (world.sky_material != null) and (world.sky_material.get_shader_parameter("grid_primary_color") == pal_arma["grid_primary_color"])
+	var curb_ok = (world.track_gen.mat_stone.emission_enabled == true)
+
+	if themes_distinct and colors_distinct and sky_ok and curb_ok:
+		print("[PASS] TrackPaletteGenerator & GameWorld 360° reactive synthwave sky verified across metadata themes (frost, inferno, cyber).")
+		passed += 1
+	else:
+		print("[FAIL] Level procedural background test failed (themes=%s, colors=%s, sky_ok=%s, curb_ok=%s)" % [
+			themes_distinct, colors_distinct, sky_ok, curb_ok
+		])
+		failed += 1
+
+	world.queue_free()
 
 	# Clean test key from save data
 	gm.save_data["high_scores"].erase(test_track)

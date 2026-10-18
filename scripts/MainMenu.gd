@@ -1,14 +1,25 @@
 # scripts/MainMenu.gd
 extends Control
 
+@onready var background: ColorRect = $Background
 @onready var title_screen: VBoxContainer = $MarginContainer/TitleScreen
 @onready var level_select_screen: VBoxContainer = $MarginContainer/LevelSelectScreen
 @onready var high_scores_screen: VBoxContainer = $MarginContainer/HighScoresScreen
 @onready var level_list_container: VBoxContainer = $MarginContainer/LevelSelectScreen/ScrollContainer/LevelList
 @onready var high_score_list_container: VBoxContainer = $MarginContainer/HighScoresScreen/ScrollContainer/HighScoreList
+@onready var bgm_player: AudioStreamPlayer = $BGMPlayer
 @onready var audio_preview_player: AudioStreamPlayer = $AudioPreviewPlayer
 
 var current_preview_track: String = ""
+var bg_material: ShaderMaterial
+var spectrum_analyzer: AudioEffectSpectrumAnalyzerInstance
+
+var cur_bass: float = 0.0
+var cur_mid: float = 0.0
+var cur_high: float = 0.0
+
+var bgm_tracks: Array[String] = []
+var current_bgm_track: String = ""
 
 func _get_gm() -> Node:
 	if is_inside_tree() and get_tree() and get_tree().root:
@@ -22,7 +33,17 @@ func _get_gm() -> Node:
 func _ready() -> void:
 	# Ensure normal engine time scale
 	Engine.time_scale = 1.0
+	randomize()
+	if background and background.material is ShaderMaterial:
+		bg_material = background.material as ShaderMaterial
+	_init_spectrum_analyzer()
+	if not bgm_player.finished.is_connected(_on_bgm_finished):
+		bgm_player.finished.connect(_on_bgm_finished)
+	if not audio_preview_player.finished.is_connected(_on_preview_finished):
+		audio_preview_player.finished.connect(_on_preview_finished)
 	_populate_levels()
+	_init_bgm_playlist()
+	_play_random_bgm()
 	_show_title()
 
 func _show_title() -> void:
@@ -31,6 +52,11 @@ func _show_title() -> void:
 	high_scores_screen.visible = false
 	if audio_preview_player.playing:
 		audio_preview_player.stop()
+		current_preview_track = ""
+	if bgm_player.stream_paused:
+		bgm_player.stream_paused = false
+	elif not bgm_player.playing:
+		_play_random_bgm()
 
 func _show_level_select() -> void:
 	title_screen.visible = false
@@ -148,8 +174,7 @@ func _populate_levels() -> void:
 		play_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		play_btn.text = "Play"
 		play_btn.pressed.connect(func():
-			if audio_preview_player.playing:
-				audio_preview_player.stop()
+			_stop_all_audio()
 			var m_gm = _get_gm()
 			if m_gm:
 				m_gm.start_level_by_name(item["filename"])
@@ -261,7 +286,12 @@ func _toggle_preview(path: String, filename: String) -> void:
 	if current_preview_track == filename and audio_preview_player.playing:
 		audio_preview_player.stop()
 		current_preview_track = ""
+		_resume_bgm()
 		return
+
+	# Pause BGM while listening to preview
+	if bgm_player.playing:
+		bgm_player.stream_paused = true
 
 	var stream = load(path)
 	if stream:
@@ -270,9 +300,113 @@ func _toggle_preview(path: String, filename: String) -> void:
 		audio_preview_player.bus = "Music"
 		audio_preview_player.play()
 
-func _on_campaign_pressed() -> void:
+func _on_preview_finished() -> void:
+	current_preview_track = ""
+	_resume_bgm()
+
+func _resume_bgm() -> void:
+	if bgm_player.stream:
+		bgm_player.stream_paused = false
+		if not bgm_player.playing:
+			bgm_player.play()
+	else:
+		_play_random_bgm()
+
+func _init_bgm_playlist() -> void:
+	bgm_tracks.clear()
+	var gm = _get_gm()
+	if gm and gm.level_list.size() > 0:
+		for lvl in gm.level_list:
+			bgm_tracks.append(lvl["path"])
+	else:
+		var dir = DirAccess.open("res://tracks")
+		if dir:
+			dir.list_dir_begin()
+			var f = dir.get_next()
+			while f != "":
+				if not dir.current_is_dir() and f.to_lower().ends_with(".mp3"):
+					bgm_tracks.append("res://tracks/" + f)
+				f = dir.get_next()
+			dir.list_dir_end()
+
+func _play_random_bgm() -> void:
+	if bgm_tracks.is_empty():
+		_init_bgm_playlist()
+	if bgm_tracks.is_empty():
+		return
+
+	var candidates = bgm_tracks.duplicate()
+	if candidates.size() > 1 and current_bgm_track != "":
+		candidates.erase(current_bgm_track)
+
+	var picked_path = candidates[randi() % candidates.size()]
+	current_bgm_track = picked_path
+
+	var stream = load(picked_path)
+	if stream:
+		bgm_player.stream = stream
+		bgm_player.bus = "Music"
+		if bgm_player.is_inside_tree():
+			bgm_player.play()
+
+func _on_bgm_finished() -> void:
+	_play_random_bgm()
+
+func _stop_all_audio() -> void:
+	if bgm_player.playing:
+		bgm_player.stop()
 	if audio_preview_player.playing:
 		audio_preview_player.stop()
+
+func _init_spectrum_analyzer() -> void:
+	var music_idx = AudioServer.get_bus_index("Music")
+	if music_idx == -1:
+		AudioServer.add_bus()
+		music_idx = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(music_idx, "Music")
+
+	var eff_idx = -1
+	for i in range(AudioServer.get_bus_effect_count(music_idx)):
+		if AudioServer.get_bus_effect(music_idx, i) is AudioEffectSpectrumAnalyzer:
+			eff_idx = i
+			break
+	if eff_idx == -1:
+		var spec = AudioEffectSpectrumAnalyzer.new()
+		AudioServer.add_bus_effect(music_idx, spec)
+		eff_idx = AudioServer.get_bus_effect_count(music_idx) - 1
+
+	spectrum_analyzer = AudioServer.get_bus_effect_instance(music_idx, eff_idx)
+
+func _process(delta: float) -> void:
+	if not bg_material:
+		return
+
+	var target_bass: float = 0.0
+	var target_mid: float = 0.0
+	var target_high: float = 0.0
+
+	if spectrum_analyzer:
+		var mag_bass = spectrum_analyzer.get_magnitude_for_frequency_range(20.0, 150.0).length()
+		var mag_mid = spectrum_analyzer.get_magnitude_for_frequency_range(150.0, 2000.0).length()
+		var mag_high = spectrum_analyzer.get_magnitude_for_frequency_range(2000.0, 10000.0).length()
+
+		target_bass = clamp(mag_bass * 3.0, 0.0, 1.5)
+		target_mid = clamp(mag_mid * 3.8, 0.0, 1.5)
+		target_high = clamp(mag_high * 4.8, 0.0, 1.5)
+
+	var attack = min(1.0, 28.0 * delta)
+	var decay = min(1.0, 7.5 * delta)
+
+	cur_bass = lerp(cur_bass, target_bass, attack if target_bass > cur_bass else decay)
+	cur_mid = lerp(cur_mid, target_mid, attack if target_mid > cur_mid else decay)
+	cur_high = lerp(cur_high, target_high, attack if target_high > cur_high else decay)
+
+	bg_material.set_shader_parameter("bass_energy", cur_bass)
+	bg_material.set_shader_parameter("mid_energy", cur_mid)
+	bg_material.set_shader_parameter("high_energy", cur_high)
+
+func _on_campaign_pressed() -> void:
+	_stop_all_audio()
 	var gm = _get_gm()
 	if gm:
 		var unl_idx = gm.save_data.get("unlocked_campaign_index", 0)
@@ -285,8 +419,7 @@ func _on_high_scores_pressed() -> void:
 	_show_high_scores()
 
 func _on_exit_pressed() -> void:
-	if audio_preview_player.playing:
-		audio_preview_player.stop()
+	_stop_all_audio()
 	get_tree().quit()
 
 func _on_back_pressed() -> void:
