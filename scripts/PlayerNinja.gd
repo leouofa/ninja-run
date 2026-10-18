@@ -32,17 +32,29 @@ var has_stumbled: bool = false
 var stumble_timer: float = 0.0
 const STUMBLE_RECOVERY_TIME: float = 6.0
 
-var current_direction: Vector3 = Vector3.FORWARD
-var can_turn_left: bool = false
-var can_turn_right: bool = false
-var turn_box_active: bool = false
-var active_turn_node: Node3D = null
+var current_direction: Vector3 = Vector3(0, 0, -1)
+
+# QTE Turn Variables
+var qte_turn_active: bool = false
+var qte_allow_left: bool = false
+var qte_allow_right: bool = false
+var qte_junction_pos: Vector3 = Vector3.ZERO
+var qte_active_zone: TurnZone = null
+
+var is_turning_corner: bool = false
+var turn_start_pos: Vector3 = Vector3.ZERO
+var turn_target_pos: Vector3 = Vector3.ZERO
+var turn_start_dir: Vector3 = Vector3.FORWARD
+var turn_target_dir: Vector3 = Vector3.FORWARD
+var turn_start_rot_y: float = 0.0
+var turn_target_rot_y: float = 0.0
+var turn_progress: float = 0.0
+const TURN_CORNER_DURATION: float = 0.22 # Smooth auto-steering curve in 0.22s
 
 # Child nodes
 var visual_root: Node3D
 var slash_mesh: MeshInstance3D
 var ninja_model: Node3D
-var shadow_mesh: Decal
 
 func _ready() -> void:
 	visual_root = Node3D.new()
@@ -95,26 +107,26 @@ func _physics_process(delta: float) -> void:
 	_update_animation_blend(delta)
 
 func _handle_input() -> void:
-	# Lane switching or Turning
+	# QTE Turn takes precedence over lane switching when in a turn window
 	if Input.is_action_just_pressed("move_left"):
-		if turn_box_active and can_turn_left:
-			_execute_turn(-1)
-		else:
+		if qte_turn_active and qte_allow_left:
+			_execute_qte_turn(-1)
+		elif not qte_turn_active:
 			_switch_lane(-1)
 
 	elif Input.is_action_just_pressed("move_right"):
-		if turn_box_active and can_turn_right:
-			_execute_turn(1)
-		else:
+		if qte_turn_active and qte_allow_right:
+			_execute_qte_turn(1)
+		elif not qte_turn_active:
 			_switch_lane(1)
 
 	# Jump (W / Up Arrow)
-	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_sliding:
+	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_sliding and not is_turning_corner:
 		velocity.y = JUMP_VELOCITY
 		is_jumping = true
 
 	# Slide (S / Down Arrow / Ctrl)
-	if Input.is_action_just_pressed("slide") and is_on_floor() and not is_sliding:
+	if Input.is_action_just_pressed("slide") and is_on_floor() and not is_sliding and not is_turning_corner:
 		is_sliding = true
 		slide_timer = SLIDE_DURATION
 		visual_root.scale = Vector3(1.0, 0.45, 1.0)
@@ -130,37 +142,43 @@ func _switch_lane(dir: int) -> void:
 		current_lane = new_lane
 		target_lane_x = float(current_lane) * LANE_WIDTH
 
-func _execute_turn(dir: int) -> void:
+func _execute_qte_turn(dir: int) -> void:
 	# dir = -1 for Left (90 deg CCW), +1 for Right (90 deg CW)
-	turn_box_active = false
-	can_turn_left = false
-	can_turn_right = false
+	qte_turn_active = false
+	if qte_active_zone and is_instance_valid(qte_active_zone):
+		qte_active_zone.has_turned = true
 
-	# Snap ninja forward direction
-	var rot_angle = -PI / 2.0 if dir == 1 else PI / 2.0
-	current_direction = current_direction.rotated(Vector3.UP, rot_angle).normalized()
-	rotation.y += rot_angle
+	is_turning_corner = true
+	turn_progress = 0.0
 
-	# Align ninja position to the turn junction center
-	if active_turn_node and is_instance_valid(active_turn_node):
-		var center_pos = active_turn_node.global_position
-		# Preserve height
-		var current_y = global_position.y
-		global_position = Vector3(center_pos.x, current_y, center_pos.z)
+	var current_p = global_position if is_inside_tree() else position
+	turn_start_pos = current_p
+	turn_start_rot_y = rotation.y
+	turn_start_dir = -transform.basis.z
+
+	var rot_angle = PI * 0.5 if dir == -1 else -PI * 0.5
+	turn_target_rot_y = turn_start_rot_y + rot_angle
+	turn_target_dir = turn_start_dir.rotated(Vector3.UP, rot_angle).normalized()
+
+	# Destination: centered on the new roadway
+	var corner_center = Vector3(qte_junction_pos.x, current_p.y, qte_junction_pos.z)
+	turn_target_pos = corner_center + turn_target_dir * (LANE_WIDTH * 1.5)
 
 	# Reset lane offset on turn
 	current_lane = 0
 	target_lane_x = 0.0
 	lane_x = 0.0
 
-	SoundEffects.play_sound(get_tree(), "turn")
+	if is_inside_tree() and get_tree():
+		SoundEffects.play_sound(get_tree(), "turn")
 	emit_signal("turn_executed", dir)
 
 func perform_slash() -> void:
 	is_slashing = true
 	slash_timer = SLASH_DURATION
 	slash_mesh.visible = true
-	SoundEffects.play_sound(get_tree(), "slash")
+	if is_inside_tree() and get_tree():
+		SoundEffects.play_sound(get_tree(), "slash")
 
 	# Slash visual sword strike rotation
 	var tween = create_tween()
@@ -173,7 +191,6 @@ func perform_slash() -> void:
 	var forward = -transform.basis.z
 	var origin = global_position + Vector3(0, 0.8, 0)
 
-	# Query overlapping bodies/areas
 	var shape_query = PhysicsShapeQueryParameters3D.new()
 	var box_shape = BoxShape3D.new()
 	box_shape.size = Vector3(4.5, 2.5, 4.5)
@@ -209,6 +226,34 @@ func _update_timers(delta: float) -> void:
 			has_stumbled = false
 
 func _update_movement(delta: float) -> void:
+	# If smoothly cornering around an intersection
+	if is_turning_corner:
+		turn_progress += delta / TURN_CORNER_DURATION
+		if turn_progress >= 1.0:
+			turn_progress = 1.0
+			is_turning_corner = false
+			if is_inside_tree():
+				global_position = turn_target_pos
+			else:
+				position = turn_target_pos
+			rotation.y = turn_target_rot_y
+			current_direction = turn_target_dir
+		else:
+			var current_y = global_position.y if is_inside_tree() else position.y
+			var corner_center = Vector3(qte_junction_pos.x, current_y, qte_junction_pos.z)
+			var p0 = turn_start_pos
+			var p1 = corner_center
+			var p2 = turn_target_pos
+			var t = turn_progress
+			# Quadratic Bezier curve
+			var arc_pos = (1.0 - t) * (1.0 - t) * p0 + 2.0 * (1.0 - t) * t * p1 + t * t * p2
+			if is_inside_tree():
+				global_position = arc_pos
+			else:
+				position = arc_pos
+			rotation.y = lerp_angle(turn_start_rot_y, turn_target_rot_y, t)
+		return
+
 	# Gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -243,11 +288,10 @@ func _update_movement(delta: float) -> void:
 	if global_position.y < -8.0:
 		trigger_death("Fell into the abyss")
 
-func _update_animation_blend(delta: float) -> void:
+func _update_animation_blend(_delta: float) -> void:
 	if not ninja_model:
 		return
 	if is_on_floor() and not is_sliding:
-		# Procedural running bob
 		var bob = sin(Time.get_ticks_msec() * 0.018) * 0.08
 		ninja_model.position.y = abs(bob)
 	else:
@@ -255,13 +299,13 @@ func _update_animation_blend(delta: float) -> void:
 
 func trigger_stumble() -> void:
 	if has_stumbled:
-		# Second stumble while spirits are close is fatal!
 		trigger_death("Overcome by pursuing evil spirits")
 		return
 
 	has_stumbled = true
 	stumble_timer = STUMBLE_RECOVERY_TIME
-	SoundEffects.play_sound(get_tree(), "stumble")
+	if is_inside_tree() and get_tree():
+		SoundEffects.play_sound(get_tree(), "stumble")
 	emit_signal("stumbled")
 
 func trigger_death(reason: String) -> void:
@@ -270,21 +314,20 @@ func trigger_death(reason: String) -> void:
 	is_dead = true
 	velocity = Vector3.ZERO
 	visible = false
-	SoundEffects.play_sound(get_tree(), "stumble")
+	if is_inside_tree() and get_tree():
+		SoundEffects.play_sound(get_tree(), "stumble")
 	emit_signal("died", reason)
 
-func enter_turn_zone(turn_node: Node3D, left: bool, right: bool) -> void:
-	turn_box_active = true
-	active_turn_node = turn_node
-	can_turn_left = left
-	can_turn_right = right
+func enter_turn_zone(zone: TurnZone, left: bool, right: bool, junction_pos: Vector3, _next_dir: Vector3) -> void:
+	qte_turn_active = true
+	qte_active_zone = zone
+	qte_allow_left = left
+	qte_allow_right = right
+	qte_junction_pos = junction_pos
 
-func exit_turn_zone(turn_node: Node3D) -> void:
-	if active_turn_node == turn_node:
-		# If the player exits the turn zone without executing a required turn, fatal cliff plunge!
-		if turn_box_active and (can_turn_left or can_turn_right):
+func exit_turn_zone(zone: TurnZone) -> void:
+	if qte_active_zone == zone:
+		if qte_turn_active and not zone.has_turned:
 			trigger_death("Missed the corner turn")
-		turn_box_active = false
-		can_turn_left = false
-		can_turn_right = false
-		active_turn_node = null
+		qte_turn_active = false
+		qte_active_zone = null

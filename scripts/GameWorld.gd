@@ -121,7 +121,7 @@ func _process(delta: float) -> void:
 
 	_update_camera(delta)
 	_update_hud()
-	_update_turn_prompt()
+	_update_turn_prompt(delta)
 	_update_chasing_spirits(delta)
 
 func _update_camera(delta: float) -> void:
@@ -166,19 +166,31 @@ func _update_hud() -> void:
 	else:
 		stumble_warning.visible = false
 
-func _update_turn_prompt() -> void:
+var turn_feedback_timer: float = 0.0
+
+func _update_turn_prompt(delta: float) -> void:
 	if not player:
 		return
-	if player.turn_box_active:
+
+	if turn_feedback_timer > 0.0:
+		turn_feedback_timer -= delta
 		turn_prompt.visible = true
-		if player.can_turn_left and player.can_turn_right:
-			turn_prompt.text = "◄ T-JUNCTION: TURN LEFT OR RIGHT ►"
-		elif player.can_turn_left:
-			turn_prompt.text = "◄ TURN LEFT [A / Left]"
-		elif player.can_turn_right:
-			turn_prompt.text = "TURN RIGHT [D / Right] ►"
+		return
+
+	if player.qte_turn_active:
+		turn_prompt.visible = true
+		turn_prompt.modulate = Color(1.0, 0.85, 0.2, 1.0)
+		var pulse = 1.0 + sin(Time.get_ticks_msec() * 0.016) * 0.08
+		turn_prompt.scale = Vector2(pulse, pulse)
+		if player.qte_allow_left and player.qte_allow_right:
+			turn_prompt.text = "◄◄ [A / LEFT] TURN LEFT  |  TURN RIGHT [D / RIGHT] ►►"
+		elif player.qte_allow_left:
+			turn_prompt.text = "◄◄ [A / LEFT] TURN LEFT ◄◄"
+		elif player.qte_allow_right:
+			turn_prompt.text = "►► [D / RIGHT] TURN RIGHT ►►"
 	else:
 		turn_prompt.visible = false
+		turn_prompt.scale = Vector2.ONE
 
 func _update_chasing_spirits(delta: float) -> void:
 	if not player:
@@ -214,7 +226,13 @@ func _on_slowdown_collected() -> void:
 	chrono_controller.add_charge()
 
 func _on_turn_executed(_dir: int) -> void:
-	score += 150 * combo
+	var gained = 250 * combo
+	score += gained
+	turn_prompt.visible = true
+	turn_prompt.text = "★ PERFECT TURN! +%d ★" % gained
+	turn_prompt.modulate = Color(0.2, 1.0, 0.4, 1.0)
+	turn_prompt.scale = Vector2(1.15, 1.15)
+	turn_feedback_timer = 0.65
 
 func _on_player_stumbled() -> void:
 	combo = 1

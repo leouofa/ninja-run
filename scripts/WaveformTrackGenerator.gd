@@ -117,13 +117,14 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 		# Build visual roadway mesh & collisions
 		_build_segment_mesh(seg_node, is_turn, is_t_junction, turn_left, turn_right)
 
+		var junction_pos = current_pos + current_dir * SEGMENT_LENGTH
+
 		# Add TurnZone if turn segment
 		if is_turn:
 			var tz = TurnZone.new()
-			tz.allow_left = turn_left
-			tz.allow_right = turn_right
-			tz.position = Vector3(0, 0, -SEGMENT_LENGTH * 0.5)
 			seg_node.add_child(tz)
+			tz.position = Vector3(0, 0, -SEGMENT_LENGTH)
+			tz.setup_zone(current_dir, junction_pos, turn_left, turn_right)
 			turn_zones.append(tz)
 
 		# Populate obstacles, pickups, and folklore Yokai
@@ -136,14 +137,11 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 
 		# Advance current position and direction for next segment
 		if is_turn:
-			# If turning, the next segment advances in the turned direction
 			var rot_y = -PI * 0.5 if turn_right else PI * 0.5
-			if is_t_junction:
-				rot_y = -PI * 0.5 # default follow branch
-			current_pos += current_dir * SEGMENT_LENGTH
+			current_pos = junction_pos
 			current_dir = current_dir.rotated(Vector3.UP, rot_y).normalized()
 		else:
-			current_pos += current_dir * SEGMENT_LENGTH
+			current_pos = junction_pos
 
 	emit_signal("track_built", total_distance, segment_count)
 
@@ -180,15 +178,31 @@ func _build_segment_mesh(parent: Node3D, is_turn: bool, is_t_junction: bool, lef
 		curb.position = Vector3(side * (TRACK_WIDTH * 0.5 - 0.25), 0.2, -SEGMENT_LENGTH * 0.5)
 		body.add_child(curb)
 
-	# If corner or T-junction, add cross branch platform so player doesn't plunge prematurely
+	# If corner or T-junction, add solid square intersection platform and side branch slabs
 	if is_turn:
+		# Center intersection square at end of segment
+		var j_col = CollisionShape3D.new()
+		var j_box = BoxShape3D.new()
+		j_box.size = Vector3(TRACK_WIDTH, 1.0, TRACK_WIDTH)
+		j_col.shape = j_box
+		j_col.position = Vector3(0, -0.5, -SEGMENT_LENGTH)
+		body.add_child(j_col)
+
+		var j_mesh = MeshInstance3D.new()
+		var j_bmesh = BoxMesh.new()
+		j_bmesh.size = j_box.size
+		j_bmesh.material = mat_wood
+		j_mesh.mesh = j_bmesh
+		j_mesh.position = j_col.position
+		body.add_child(j_mesh)
+
 		if left:
 			_add_turn_arm(body, -1)
 		if right:
 			_add_turn_arm(body, 1)
 
 	# Prop: Torii Arch on straight paths periodically
-	if not is_turn and parent.name.ends_with("4") or parent.name.ends_with("8"):
+	if not is_turn and (parent.name.ends_with("4") or parent.name.ends_with("8")):
 		var arch_scene = load("res://assets/models/env_shrine_arch.glb")
 		if arch_scene:
 			var arch = arch_scene.instantiate()
@@ -196,12 +210,12 @@ func _build_segment_mesh(parent: Node3D, is_turn: bool, is_t_junction: bool, lef
 			parent.add_child(arch)
 
 func _add_turn_arm(body: StaticBody3D, side_dir: int) -> void:
-	# Extension slab going 90 deg out from center of junction
+	# Branch slab connecting at junction end z = -SEGMENT_LENGTH
 	var arm_col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(SEGMENT_LENGTH, 1.0, TRACK_WIDTH)
+	box.size = Vector3(TRACK_WIDTH * 1.5, 1.0, TRACK_WIDTH)
 	arm_col.shape = box
-	arm_col.position = Vector3(side_dir * SEGMENT_LENGTH * 0.5, -0.5, -SEGMENT_LENGTH * 0.5)
+	arm_col.position = Vector3(side_dir * (TRACK_WIDTH * 0.75), -0.5, -SEGMENT_LENGTH)
 	body.add_child(arm_col)
 
 	var arm_mesh = MeshInstance3D.new()

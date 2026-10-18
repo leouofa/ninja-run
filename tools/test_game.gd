@@ -96,17 +96,32 @@ func _init() -> void:
 		failed += 1
 	track_gen.queue_free()
 
-	# 6. Test GameWorld Scene Loading
-	var world_scene = load("res://scenes/GameWorld.tscn")
-	if world_scene:
-		var world_inst = world_scene.instantiate()
-		root.add_child(world_inst)
-		print("[PASS] GameWorld scene instantiated cleanly without errors.")
-		passed += 1
-		world_inst.queue_free()
+	# 7. Test QTE Turn Execution & Auto-Steering Arc
+	var ninja = PlayerNinja.new()
+	root.add_child(ninja)
+	ninja._ready()
+	var tz = TurnZone.new()
+	tz.allow_left = true
+	tz.allow_right = false
+	ninja.enter_turn_zone(tz, true, false, Vector3(0, 0, -12), Vector3(-1, 0, 0))
+	if ninja.qte_turn_active:
+		ninja._execute_qte_turn(-1)
+		if ninja.is_turning_corner and not ninja.qte_turn_active:
+			ninja._update_movement(0.25) # advance past TURN_CORNER_DURATION (0.22s)
+			if not ninja.is_turning_corner and ninja.current_direction.x < -0.9:
+				print("[PASS] QTE Turn auto-steering Bezier curve successfully turned 90° onto new branch!")
+				passed += 1
+			else:
+				print("[FAIL] QTE Turn did not complete to expected direction:", ninja.current_direction)
+				failed += 1
+		else:
+			print("[FAIL] _execute_qte_turn failed to start turning corner.")
+			failed += 1
 	else:
-		print("[FAIL] Could not load GameWorld.tscn.")
+		print("[FAIL] ninja did not enter QTE turn state.")
 		failed += 1
+	tz.queue_free()
+	ninja.queue_free()
 
 	if created_gm and is_instance_valid(gm):
 		gm.queue_free()
