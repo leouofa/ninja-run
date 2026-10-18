@@ -273,21 +273,24 @@ func _init() -> void:
 	root.add_child(menu)
 	menu._ready()
 
+	var lvl_btn = menu.get_node_or_null("MarginContainer/TitleScreen/LevelSelectBtn")
+	var exit_btn = menu.get_node_or_null("MarginContainer/TitleScreen/ExitBtn")
 	var hs_btn = menu.get_node_or_null("MarginContainer/TitleScreen/HighScoresBtn")
 	var hs_screen = menu.get_node_or_null("MarginContainer/HighScoresScreen")
 	var hs_list = menu.get_node_or_null("MarginContainer/HighScoresScreen/ScrollContainer/HighScoreList")
 
-	if hs_btn and hs_screen and hs_list:
+	if lvl_btn and exit_btn and hs_btn and hs_screen and hs_list:
+		var labels_ok = (lvl_btn.text == "Select Level") and exit_btn.text.begins_with("Exit")
 		menu._on_high_scores_pressed()
 		var items_count = hs_list.get_child_count()
-		if hs_screen.visible and not menu.title_screen.visible and items_count == 36:
-			print("[PASS] MainMenu High Scores screen verified: button exists, displays %d soundtrack tracks." % items_count)
+		if labels_ok and hs_screen.visible and not menu.title_screen.visible and items_count == 36:
+			print("[PASS] MainMenu UI verified: 'Select Level' label, Exit button, and High Scores screen (%d tracks)." % items_count)
 			passed += 1
 		else:
-			print("[FAIL] MainMenu High Scores screen display issue (visible=%s, items=%d)" % [hs_screen.visible, items_count])
+			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, visible=%s, items=%d)" % [labels_ok, hs_screen.visible, items_count])
 			failed += 1
 	else:
-		print("[FAIL] MainMenu missing HighScoresBtn or HighScoresScreen nodes.")
+		print("[FAIL] MainMenu missing expected buttons or HighScoresScreen nodes.")
 		failed += 1
 
 	menu.queue_free()

@@ -75,7 +75,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
-text = "Select Level (36 Tracks)"
+text = "Select Level"
 
 [node name="HighScoresBtn" type="Button" parent="MarginContainer/TitleScreen"]
 custom_minimum_size = Vector2(280, 50)
@@ -84,6 +84,18 @@ mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "High Scores"
+
+[node name="ExitBtn" type="Button" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(280, 50)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "Exit Game"
+
+[node name="Spacer2" type="Control" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
 
 [node name="ControlsLegend" type="Label" parent="MarginContainer/TitleScreen"]
 layout_mode = 2
@@ -158,5 +170,6 @@ theme_override_constants/separation = 8
 [connection signal="pressed" from="MarginContainer/TitleScreen/CampaignBtn" to="." method="_on_campaign_pressed"]
 [connection signal="pressed" from="MarginContainer/TitleScreen/LevelSelectBtn" to="." method="_on_level_select_pressed"]
 [connection signal="pressed" from="MarginContainer/TitleScreen/HighScoresBtn" to="." method="_on_high_scores_pressed"]
+[connection signal="pressed" from="MarginContainer/TitleScreen/ExitBtn" to="." method="_on_exit_pressed"]
 [connection signal="pressed" from="MarginContainer/LevelSelectScreen/Header/BackBtn" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="MarginContainer/HighScoresScreen/Header/BackBtn" to="." method="_on_back_pressed"]

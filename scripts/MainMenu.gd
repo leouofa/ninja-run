@@ -261,5 +261,10 @@ func _on_level_select_pressed() -> void:
 func _on_high_scores_pressed() -> void:
 	_show_high_scores()
 
+func _on_exit_pressed() -> void:
+	if audio_preview_player.playing:
+		audio_preview_player.stop()
+	get_tree().quit()
+
 func _on_back_pressed() -> void:
 	_show_title()
