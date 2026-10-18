@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c4uoysgr5rx0c"
+path="res://.godot/imported/Thunder in the Backseat.mp3-a3b4b4db39d17be6646a4327ad1bf1e8.mp3str"
+
+[deps]
+
+source_file="res://tracks/Thunder in the Backseat.mp3"
+dest_files=["res://.godot/imported/Thunder in the Backseat.mp3-a3b4b4db39d17be6646a4327ad1bf1e8.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

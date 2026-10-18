@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bc6ed7q5nx7b1"
+path="res://.godot/imported/Loki and the Bottle of Mead.mp3-901c53f515239c3e0ea6d197c12c664f.mp3str"
+
+[deps]
+
+source_file="res://tracks/Loki and the Bottle of Mead.mp3"
+dest_files=["res://.godot/imported/Loki and the Bottle of Mead.mp3-901c53f515239c3e0ea6d197c12c664f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

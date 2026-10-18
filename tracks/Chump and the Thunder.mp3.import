@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bd2tcqisfj7w"
+path="res://.godot/imported/Chump and the Thunder.mp3-6669502b1f60406f12c8cc31be00def6.mp3str"
+
+[deps]
+
+source_file="res://tracks/Chump and the Thunder.mp3"
+dest_files=["res://.godot/imported/Chump and the Thunder.mp3-6669502b1f60406f12c8cc31be00def6.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

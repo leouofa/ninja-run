@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bmkmqt8mynu13"
+path="res://.godot/imported/God Mode.mp3-616e1af55ddf8972890738e4d33b954e.mp3str"
+
+[deps]
+
+source_file="res://tracks/God Mode.mp3"
+dest_files=["res://.godot/imported/God Mode.mp3-616e1af55ddf8972890738e4d33b954e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

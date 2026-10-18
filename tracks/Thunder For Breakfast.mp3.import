@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c26d3e0ux4uyr"
+path="res://.godot/imported/Thunder For Breakfast.mp3-ae853b202d11c1d6bbfd450e50407f62.mp3str"
+
+[deps]
+
+source_file="res://tracks/Thunder For Breakfast.mp3"
+dest_files=["res://.godot/imported/Thunder For Breakfast.mp3-ae853b202d11c1d6bbfd450e50407f62.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

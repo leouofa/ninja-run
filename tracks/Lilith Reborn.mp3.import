@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cqcbnckage5ta"
+path="res://.godot/imported/Lilith Reborn.mp3-958b9b5aeebe75a039270a92468cca40.mp3str"
+
+[deps]
+
+source_file="res://tracks/Lilith Reborn.mp3"
+dest_files=["res://.godot/imported/Lilith Reborn.mp3-958b9b5aeebe75a039270a92468cca40.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

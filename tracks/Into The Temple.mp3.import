@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b68q58ilagqh0"
+path="res://.godot/imported/Into The Temple.mp3-7c54715be1d4ef4f41c166b78608f37c.mp3str"
+
+[deps]
+
+source_file="res://tracks/Into The Temple.mp3"
+dest_files=["res://.godot/imported/Into The Temple.mp3-7c54715be1d4ef4f41c166b78608f37c.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

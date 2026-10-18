@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://doscx67c3h0ab"
+path="res://.godot/imported/Sparkling After The War.mp3-a1fb21d28a01f96cca25289dd07a9222.mp3str"
+
+[deps]
+
+source_file="res://tracks/Sparkling After The War.mp3"
+dest_files=["res://.godot/imported/Sparkling After The War.mp3-a1fb21d28a01f96cca25289dd07a9222.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bpht4tn5frlu6"
+path="res://.godot/imported/Peaches for the Pharaoh.mp3-9c164785e5da2dc7c7cb3ffa7e6f3096.mp3str"
+
+[deps]
+
+source_file="res://tracks/Peaches for the Pharaoh.mp3"
+dest_files=["res://.godot/imported/Peaches for the Pharaoh.mp3-9c164785e5da2dc7c7cb3ffa7e6f3096.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

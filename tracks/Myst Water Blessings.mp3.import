@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dw3kvjaj7qevf"
+path="res://.godot/imported/Myst Water Blessings.mp3-09e512df1ecc62bb8aa91f083701648a.mp3str"
+
+[deps]
+
+source_file="res://tracks/Myst Water Blessings.mp3"
+dest_files=["res://.godot/imported/Myst Water Blessings.mp3-09e512df1ecc62bb8aa91f083701648a.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

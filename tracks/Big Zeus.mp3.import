@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://daitr4wpahxg4"
+path="res://.godot/imported/Big Zeus.mp3-03c9fca7af16fd26d7c791da3a1c5e9f.mp3str"
+
+[deps]
+
+source_file="res://tracks/Big Zeus.mp3"
+dest_files=["res://.godot/imported/Big Zeus.mp3-03c9fca7af16fd26d7c791da3a1c5e9f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

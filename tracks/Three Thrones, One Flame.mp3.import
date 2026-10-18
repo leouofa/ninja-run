@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://der7wcwk3txe"
+path="res://.godot/imported/Three Thrones, One Flame.mp3-031ed7e4e78008b839082c1b9f81b660.mp3str"
+
+[deps]
+
+source_file="res://tracks/Three Thrones, One Flame.mp3"
+dest_files=["res://.godot/imported/Three Thrones, One Flame.mp3-031ed7e4e78008b839082c1b9f81b660.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

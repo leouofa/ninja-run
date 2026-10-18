@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://xd7jp4ggk18k"
+path="res://.godot/imported/Beat to a Masterpiece.mp3-43190d0b1960dc278761a90b7e632904.mp3str"
+
+[deps]
+
+source_file="res://tracks/Beat to a Masterpiece.mp3"
+dest_files=["res://.godot/imported/Beat to a Masterpiece.mp3-43190d0b1960dc278761a90b7e632904.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

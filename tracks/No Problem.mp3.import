@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bl4dlqwosmen7"
+path="res://.godot/imported/No Problem.mp3-35e33c826ac3dd5a887fb623ecb62b72.mp3str"
+
+[deps]
+
+source_file="res://tracks/No Problem.mp3"
+dest_files=["res://.godot/imported/No Problem.mp3-35e33c826ac3dd5a887fb623ecb62b72.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

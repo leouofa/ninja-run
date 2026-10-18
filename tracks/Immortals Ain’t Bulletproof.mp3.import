@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://doxwcjoqcpo4d"
+path="res://.godot/imported/Immortals Ain’t Bulletproof.mp3-881abe6b252b934281d7c51943158957.mp3str"
+
+[deps]
+
+source_file="res://tracks/Immortals Ain’t Bulletproof.mp3"
+dest_files=["res://.godot/imported/Immortals Ain’t Bulletproof.mp3-881abe6b252b934281d7c51943158957.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

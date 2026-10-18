@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://d34a4m8gu6adk"
+path="res://.godot/imported/Paranoid Pharaoh.mp3-2985a64516b27d2756e04d50cb119dd5.mp3str"
+
+[deps]
+
+source_file="res://tracks/Paranoid Pharaoh.mp3"
+dest_files=["res://.godot/imported/Paranoid Pharaoh.mp3-2985a64516b27d2756e04d50cb119dd5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

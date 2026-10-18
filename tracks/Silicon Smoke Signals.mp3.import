@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://docxy8hnp0i33"
+path="res://.godot/imported/Silicon Smoke Signals.mp3-f4aae238c00b8a7c782a13d5aad52a71.mp3str"
+
+[deps]
+
+source_file="res://tracks/Silicon Smoke Signals.mp3"
+dest_files=["res://.godot/imported/Silicon Smoke Signals.mp3-f4aae238c00b8a7c782a13d5aad52a71.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
