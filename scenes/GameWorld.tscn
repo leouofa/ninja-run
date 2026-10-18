@@ -1,0 +1,316 @@
+[gd_scene load_steps=7 format=3 uid="uid://c7k9w5e3f1q0a"]
+
+[ext_resource type="Script" path="res://scripts/GameWorld.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/WaveformTrackGenerator.gd" id="2_track"]
+[ext_resource type="Script" path="res://scripts/ChronoController.gd" id="3_chrono"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_night"]
+sky_top_color = Color(0.04, 0.06, 0.12, 1)
+sky_horizon_color = Color(0.12, 0.15, 0.22, 1)
+ground_bottom_color = Color(0.02, 0.03, 0.05, 1)
+ground_horizon_color = Color(0.08, 0.1, 0.15, 1)
+
+[sub_resource type="Sky" id="Sky_night"]
+sky_material = SubResource("ProceduralSkyMaterial_night")
+
+[sub_resource type="Environment" id="Environment_japan_night"]
+background_mode = 2
+sky = SubResource("Sky_night")
+ambient_light_source = 2
+ambient_light_color = Color(0.2, 0.25, 0.35, 1)
+tonemap_mode = 2
+glow_enabled = true
+glow_bloom = 0.2
+fog_enabled = true
+fog_light_color = Color(0.1, 0.12, 0.18, 1)
+fog_density = 0.008
+
+[node name="GameWorld" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_japan_night")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 15, 0)
+light_color = Color(0.65, 0.78, 0.95, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 3.5, 5.5)
+current = true
+fov = 68.0
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Music"
+
+[node name="WaveformTrackGenerator" type="Node3D" parent="."]
+script = ExtResource("2_track")
+
+[node name="ChronoController" type="Node" parent="."]
+script = ExtResource("3_chrono")
+
+[node name="HUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SlowmoVignette" type="ColorRect" parent="HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.35, 0.55, 0.22)
+
+[node name="TopCenter" type="VBoxContainer" parent="HUD"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 18.0
+offset_right = 220.0
+offset_bottom = 68.0
+grow_horizontal = 2
+
+[node name="TimeBar" type="ProgressBar" parent="HUD/TopCenter"]
+custom_minimum_size = Vector2(440, 14)
+layout_mode = 2
+show_percentage = false
+
+[node name="TimeLabel" type="Label" parent="HUD/TopCenter"]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 15
+text = "00:00 / 03:00"
+horizontal_alignment = 1
+
+[node name="TopLeft" type="VBoxContainer" parent="HUD"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 240.0
+offset_bottom = 120.0
+
+[node name="ScoreLabel" type="Label" parent="HUD/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 22
+text = "SCORE: 0"
+
+[node name="ComboLabel" type="Label" parent="HUD/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 18
+text = "COMBO: x1"
+
+[node name="CoinsLabel" type="Label" parent="HUD/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 16
+text = "KOBAN: 0"
+
+[node name="BottomLeft" type="VBoxContainer" parent="HUD"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -110.0
+offset_right = 280.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="ChronoLabel" type="Label" parent="HUD/BottomLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "CHRONO-FOCUS [SHIFT]"
+
+[node name="ChronoSlots" type="HBoxContainer" parent="HUD/BottomLeft"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Orb1" type="Panel" parent="HUD/BottomLeft/ChronoSlots"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+
+[node name="Orb2" type="Panel" parent="HUD/BottomLeft/ChronoSlots"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+
+[node name="Orb3" type="Panel" parent="HUD/BottomLeft/ChronoSlots"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+
+[node name="ChronoBar" type="ProgressBar" parent="HUD/BottomLeft"]
+visible = false
+custom_minimum_size = Vector2(160, 8)
+layout_mode = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="CenterPrompt" type="Label" parent="HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -120.0
+offset_right = 250.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "◄ TURN LEFT"
+horizontal_alignment = 1
+
+[node name="StumbleWarning" type="Label" parent="HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -70.0
+offset_right = 260.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 18
+text = "⚠ SPIRITS PURSUING! AVOID HITS"
+horizontal_alignment = 1
+
+[node name="VictoryPanel" type="PanelContainer" parent="HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -170.0
+offset_right = 220.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/VictoryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="HUD/VictoryPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 32
+text = "TORII GATE REACHED!"
+horizontal_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="HUD/VictoryPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Score: 12500
+Coins: 45 | Yōkai Slain: 12"
+horizontal_alignment = 1
+
+[node name="NextLevelBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
+custom_minimum_size = Vector2(220, 45)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "Next Level ➔"
+
+[node name="ReplayBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Replay Level"
+
+[node name="LevelSelectBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Level Select"
+
+[node name="GameOverPanel" type="PanelContainer" parent="HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -160.0
+offset_right = 220.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/GameOverPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="HUD/GameOverPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.25, 0.2, 1)
+theme_override_font_sizes/font_size = 32
+text = "SHINOBI FALLEN"
+horizontal_alignment = 1
+
+[node name="ReasonLabel" type="Label" parent="HUD/GameOverPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 16
+text = "Defeat: Fell into abyss"
+horizontal_alignment = 1
+
+[node name="PctLabel" type="Label" parent="HUD/GameOverPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Track Completed: 62.4%"
+horizontal_alignment = 1
+
+[node name="RetryBtn" type="Button" parent="HUD/GameOverPanel/VBox"]
+custom_minimum_size = Vector2(220, 45)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "⚔ Retry Level"
+
+[node name="LevelSelectBtn2" type="Button" parent="HUD/GameOverPanel/VBox"]
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Level Select"
+
+[connection signal="pressed" from="HUD/VictoryPanel/VBox/NextLevelBtn" to="." method="_on_next_level_pressed"]
+[connection signal="pressed" from="HUD/VictoryPanel/VBox/ReplayBtn" to="." method="_on_replay_pressed"]
+[connection signal="pressed" from="HUD/VictoryPanel/VBox/LevelSelectBtn" to="." method="_on_level_select_pressed"]
+[connection signal="pressed" from="HUD/GameOverPanel/VBox/RetryBtn" to="." method="_on_replay_pressed"]
+[connection signal="pressed" from="HUD/GameOverPanel/VBox/LevelSelectBtn2" to="." method="_on_level_select_pressed"]

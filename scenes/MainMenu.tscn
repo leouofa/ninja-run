@@ -1,0 +1,118 @@
+[gd_scene load_steps=2 format=3 uid="uid://b23v8j1o5d3re"]
+
+[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.07, 0.1, 1)
+
+[node name="AudioPreviewPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Music"
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 40
+
+[node name="TitleScreen" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Title" type="Label" parent="MarginContainer/TitleScreen"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.2, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 54
+text = "NINJA RUN"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="MarginContainer/TitleScreen"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 24
+text = "SHADOWS OF YŌKAI • 妖魔の影"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="CampaignBtn" type="Button" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(280, 55)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+text = "⚔ Play Campaign"
+
+[node name="LevelSelectBtn" type="Button" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(280, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "📜 Select Level (36 Tracks)"
+
+[node name="ControlsLegend" type="Label" parent="MarginContainer/TitleScreen"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.7, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "Controls: A/D or Left/Right to Switch Lanes & Turn • W/Up to Jump • S/Down to Slide
+Space or F to Katana Slash (Destroys All Yōkai!) • Shift for Chrono-Focus (Slows Time & Music)"
+horizontal_alignment = 1
+
+[node name="LevelSelectScreen" type="VBoxContainer" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen"]
+layout_mode = 2
+
+[node name="BackBtn" type="Button" parent="MarginContainer/LevelSelectScreen/Header"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "◀ Back"
+
+[node name="HeaderTitle" type="Label" parent="MarginContainer/LevelSelectScreen/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 26
+text = "SELECT SOUNDTRACK LEVEL"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/LevelSelectScreen"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LevelList" type="VBoxContainer" parent="MarginContainer/LevelSelectScreen/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[connection signal="pressed" from="MarginContainer/TitleScreen/CampaignBtn" to="." method="_on_campaign_pressed"]
+[connection signal="pressed" from="MarginContainer/TitleScreen/LevelSelectBtn" to="." method="_on_level_select_pressed"]
+[connection signal="pressed" from="MarginContainer/LevelSelectScreen/Header/BackBtn" to="." method="_on_back_pressed"]
