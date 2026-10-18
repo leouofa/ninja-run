@@ -35,7 +35,11 @@ func on_slashed() -> void:
 	SoundEffects.play_sound(get_tree(), "slash")
 	var players = get_tree().get_nodes_in_group("player")
 	if players.size() > 0:
-		players[0].emit_signal("slashed_enemy", "barricade", 100)
+		var player = players[0]
+		if player.has_method("record_slashed_enemy"):
+			player.record_slashed_enemy("barricade", 100)
+		else:
+			player.slashed_enemy.emit("barricade", 100)
 	queue_free()
 
 func _on_body_entered(body: Node3D) -> void:

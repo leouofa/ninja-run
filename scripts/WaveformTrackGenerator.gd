@@ -145,7 +145,7 @@ func build_track_for_level(level_dict: Dictionary) -> void:
 
 	emit_signal("track_built", total_distance, segment_count)
 
-func _build_segment_mesh(parent: Node3D, is_turn: bool, is_t_junction: bool, left: bool, right: bool) -> void:
+func _build_segment_mesh(parent: Node3D, is_turn: bool, _is_t_junction: bool, left: bool, right: bool) -> void:
 	# Main roadway box (StaticBody3D + CollisionShape3D + MeshInstance3D)
 	var body = StaticBody3D.new()
 	body.collision_layer = 1

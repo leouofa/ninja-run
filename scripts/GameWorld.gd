@@ -212,7 +212,7 @@ func _update_chrono_ui(count: int) -> void:
 		if orb:
 			orb.modulate = Color(0.2, 0.9, 1.0, 1.0) if i < count else Color(0.2, 0.2, 0.3, 0.4)
 
-func _on_enemy_slashed(type: String, points: int) -> void:
+func _on_enemy_slashed(_type: String, points: int) -> void:
 	yokai_slain += 1
 	var gained = points * combo
 	score += gained

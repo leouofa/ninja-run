@@ -331,3 +331,13 @@ func exit_turn_zone(zone: TurnZone) -> void:
 			trigger_death("Missed the corner turn")
 		qte_turn_active = false
 		qte_active_zone = null
+
+func collect_coin(value: int) -> void:
+	coin_collected.emit(value)
+
+func collect_slowdown() -> void:
+	slowdown_collected.emit()
+
+func record_slashed_enemy(enemy_name: String, points: int) -> void:
+	slashed_enemy.emit(enemy_name, points)
+
