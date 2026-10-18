@@ -12,7 +12,8 @@ var visual_mesh: Node3D
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
-	body_entered.connect(_on_body_entered)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
 	_load_model()
 
 func _load_model() -> void:

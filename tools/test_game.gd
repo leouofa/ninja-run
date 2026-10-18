@@ -96,6 +96,68 @@ func _init() -> void:
 		failed += 1
 	track_gen.queue_free()
 
+	# 6. Test Widened Track Dimensions & Obstacle Single-Track Containment
+	if WaveformTrackGenerator.TRACK_WIDTH == 12.4 and WaveformTrackGenerator.LANE_WIDTH == 3.6 and PlayerNinja.LANE_WIDTH == 3.6:
+		print("[PASS] Widened track constants verified: TRACK_WIDTH=12.4m, LANE_WIDTH=3.6m (2x widened).")
+		passed += 1
+	else:
+		print("[FAIL] Track constants mismatch.")
+		failed += 1
+
+	var single_lane_ok = true
+	for obs_type in ["barricade", "high_gate"]:
+		var obs = Obstacle.new()
+		obs.obstacle_type = obs_type
+		root.add_child(obs)
+		obs._ready()
+		var obs_col = obs.get_node_or_null("CollisionShape3D")
+		if obs_col and obs_col.shape is BoxShape3D:
+			var obs_w = obs_col.shape.size.x
+			# Ensure obstacle is sized 2.4m and strictly fits within single 3.6m lane with generous clearance
+			if obs_w <= 2.5 and obs_w >= 2.3:
+				var half_w = obs_w * 0.5
+				var clearance_to_adjacent_center = 3.6 - half_w
+				var clearance_to_adjacent_hitbox = clearance_to_adjacent_center - 0.6 # Ninja half-width is 0.6m
+				print("[PASS] Obstacle '%s' width is %.2fm. Clearance to adjacent runner hitbox is %.2fm (> 1.7m safe air)." % [obs_type, obs_w, clearance_to_adjacent_hitbox])
+			else:
+				print("[FAIL] Obstacle '%s' width %.2fm does not match expected single-lane width (2.4m)." % [obs_type, obs_w])
+				single_lane_ok = false
+		else:
+			print("[FAIL] Obstacle '%s' missing BoxShape3D collision." % obs_type)
+			single_lane_ok = false
+		obs.queue_free()
+
+	if single_lane_ok:
+		passed += 1
+	else:
+		failed += 1
+
+	# 7. Test Kinematic Lane Displacement Precision across Framerates
+	var lane_precision_ok = true
+	for fps in [30, 60, 120, 144]:
+		var dt = 1.0 / float(fps)
+		var test_lane_x = 0.0
+		var test_target_x = 3.6
+		var integrated_lateral = 0.0
+		for step in range(fps * 2): # 2 seconds of running
+			var prev_x = test_lane_x
+			test_lane_x = lerpf(test_lane_x, test_target_x, 1.0 - exp(-18.0 * dt))
+			if absf(test_target_x - test_lane_x) < 0.005:
+				test_lane_x = test_target_x
+			var delta_l = test_lane_x - prev_x
+			var vel_l = delta_l / dt
+			integrated_lateral += vel_l * dt
+		if absf(integrated_lateral - 3.6) < 0.01:
+			print("[PASS] Lane switch @ %d FPS accurately reached %.3fm (target 3.600m)." % [fps, integrated_lateral])
+		else:
+			print("[FAIL] Lane switch @ %d FPS only reached %.3fm (expected 3.600m)!" % [fps, integrated_lateral])
+			lane_precision_ok = false
+
+	if lane_precision_ok:
+		passed += 1
+	else:
+		failed += 1
+
 	# 7. Test QTE Turn Execution & Auto-Steering Arc
 	var ninja = PlayerNinja.new()
 	root.add_child(ninja)

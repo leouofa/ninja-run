@@ -13,8 +13,10 @@ var has_turned: bool = false
 func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 1
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not body_exited.is_connected(_on_body_exited):
+		body_exited.connect(_on_body_exited)
 
 func setup_zone(incoming_dir: Vector3, junction_pos: Vector3, left: bool, right: bool) -> void:
 	allow_left = left
@@ -37,7 +39,7 @@ func setup_zone(incoming_dir: Vector3, junction_pos: Vector3, left: bool, right:
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
 	var total_len = 16.0
-	box.size = Vector3(6.5, 4.0, total_len)
+	box.size = Vector3(14.0, 4.0, total_len)
 	col.shape = box
 
 	# Position the box so it covers 13m before junction and 3m past it

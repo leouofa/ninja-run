@@ -9,7 +9,7 @@ signal coin_collected(value: int)
 signal slowdown_collected()
 signal turn_executed(direction: int)
 
-const LANE_WIDTH: float = 1.8
+const LANE_WIDTH: float = 3.6
 const BASE_FORWARD_SPEED: float = 18.0
 const JUMP_VELOCITY: float = 8.5
 const GRAVITY: float = 24.0
@@ -81,7 +81,7 @@ func _setup_collision() -> void:
 func _setup_slash_fx() -> void:
 	slash_mesh = MeshInstance3D.new()
 	var quad = QuadMesh.new()
-	quad.size = Vector2(2.4, 1.2)
+	quad.size = Vector2(3.2, 1.3)
 	slash_mesh.mesh = quad
 	slash_mesh.position = Vector3(0, 1.0, -1.2)
 	slash_mesh.rotation_degrees = Vector3(-15, 0, 0)
@@ -261,19 +261,23 @@ func _update_movement(delta: float) -> void:
 		if is_jumping:
 			is_jumping = false
 
-	# Lateral lane interpolation
-	var responsiveness = 16.0
+	# Lateral lane interpolation with exact kinematic delta integration
+	var prev_lane_x = lane_x
+	var responsiveness = 18.0
 	if Engine.time_scale < 0.9:
-		responsiveness = 26.0 # Snappy responsiveness during Chrono slow-mo!
-	lane_x = lerpf(lane_x, target_lane_x, responsiveness * delta)
+		responsiveness = 28.0 # Snappy responsiveness during Chrono slow-mo!
+	lane_x = lerpf(lane_x, target_lane_x, 1.0 - exp(-responsiveness * delta))
+	if absf(target_lane_x - lane_x) < 0.005:
+		lane_x = target_lane_x
+
+	var delta_lateral = lane_x - prev_lane_x
 
 	# Forward velocity along orientation
 	var forward = -transform.basis.z
 	var right = transform.basis.x
 
 	var forward_vel = forward * BASE_FORWARD_SPEED
-	var lateral_diff = (target_lane_x - lane_x)
-	var lateral_vel = right * (lateral_diff * 12.0)
+	var lateral_vel = right * (delta_lateral / delta) if delta > 0.00001 else Vector3.ZERO
 
 	velocity.x = forward_vel.x + lateral_vel.x
 	velocity.z = forward_vel.z + lateral_vel.z
@@ -281,7 +285,7 @@ func _update_movement(delta: float) -> void:
 	move_and_slide()
 
 	# Visual tilt on lane switch
-	var target_tilt = clampf((target_lane_x - lane_x) * -0.25, -0.35, 0.35)
+	var target_tilt = clampf((target_lane_x - lane_x) * -0.2, -0.35, 0.35)
 	visual_root.rotation.z = lerpf(visual_root.rotation.z, target_tilt, 15.0 * delta)
 
 	# Pit fall check

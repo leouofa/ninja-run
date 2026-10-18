@@ -5,9 +5,9 @@ extends Node3D
 signal track_built(total_distance: float, segment_count: int)
 signal goal_reached()
 
-const SEGMENT_LENGTH: float = 12.0
-const LANE_WIDTH: float = 1.8
-const TRACK_WIDTH: float = 6.2
+const SEGMENT_LENGTH: float = 24.0
+const LANE_WIDTH: float = 3.6
+const TRACK_WIDTH: float = 12.4
 const CURB_WIDTH: float = 0.5
 const CURB_HEIGHT: float = 0.4
 const BASE_SPEED: float = 18.0
@@ -282,7 +282,7 @@ func _populate_segment_contents(parent: Node3D, rms: float, low: float, rng: Ran
 	if rng.randf() < 0.6:
 		var coin_lane = lanes[rng.randi() % 3]
 		if not occupied_lanes.has(coin_lane):
-			for z_off in [-3.0, 0.0, 3.0]:
+			for z_off in [-5.0, 0.0, 5.0]:
 				var coin = Pickup.new()
 				coin.pickup_type = "koban"
 				coin.position = Vector3(coin_lane, 0.0, -SEGMENT_LENGTH * 0.5 + z_off)
