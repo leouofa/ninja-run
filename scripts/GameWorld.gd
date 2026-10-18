@@ -1,6 +1,8 @@
 # scripts/GameWorld.gd
 extends Node3D
 
+@onready var world_env: WorldEnvironment = $WorldEnvironment
+@onready var dir_light: DirectionalLight3D = $DirectionalLight3D
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
 @onready var camera: Camera3D = $Camera3D
 @onready var track_gen: WaveformTrackGenerator = $WaveformTrackGenerator
@@ -29,6 +31,18 @@ extends Node3D
 var player: PlayerNinja
 var track_name: String = ""
 var track_info: Dictionary = {}
+var track_palette: Dictionary = {}
+var sky_material: ShaderMaterial
+var spectrum_analyzer: AudioEffectSpectrumAnalyzerInstance
+
+var cur_bass: float = 0.0
+var cur_mid: float = 0.0
+var cur_high: float = 0.0
+var cur_drop: float = 0.0
+var cur_chrono: float = 0.0
+var grid_scroll_offset: float = 0.0
+var grid_speed_base: float = 0.65
+
 var duration: float = 180.0
 var score: int = 0
 var combo: int = 1
@@ -38,6 +52,15 @@ var game_ended: bool = false
 
 # Pursuing spirits visual nodes
 var chasing_spirits: Array[Node3D] = []
+
+func _get_gm() -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		var gm = get_tree().root.get_node_or_null("GameManager")
+		if gm:
+			return gm
+	if get_parent() and get_parent().has_node("GameManager"):
+		return get_parent().get_node("GameManager")
+	return null
 
 func _ready() -> void:
 	# Reset state
@@ -49,7 +72,7 @@ func _ready() -> void:
 	slowmo_vignette.visible = false
 
 	# Setup current level
-	var gm = get_node_or_null("/root/GameManager")
+	var gm = _get_gm()
 	if gm:
 		track_name = gm.current_track_name
 		if track_name.is_empty() and gm.level_list.size() > 0:
@@ -63,30 +86,38 @@ func _ready() -> void:
 
 	duration = track_info.get("duration", 180.0)
 
-	# Spawn Player
-	player = PlayerNinja.new()
-	player.name = "PlayerNinja"
-	player.add_to_group("player")
-	add_child(player)
-	player.position = Vector3(0, 0.5, 0)
+	# Initialize Audio Spectrum Analyzer & Metadata Procedural Background
+	_init_spectrum_analyzer()
+	_setup_level_background()
 
-	# Connect Player Signals
-	player.died.connect(_on_player_died)
-	player.stumbled.connect(_on_player_stumbled)
-	player.slashed_enemy.connect(_on_enemy_slashed)
-	player.coin_collected.connect(_on_coin_collected)
-	player.slowdown_collected.connect(_on_slowdown_collected)
-	player.turn_executed.connect(_on_turn_executed)
+	# Spawn Player (if not already spawned)
+	if not player or not is_instance_valid(player):
+		player = PlayerNinja.new()
+		player.name = "PlayerNinja"
+		player.add_to_group("player")
+		add_child(player)
+		player.position = Vector3(0, 0.5, 0)
+
+		# Connect Player Signals
+		player.died.connect(_on_player_died)
+		player.stumbled.connect(_on_player_stumbled)
+		player.slashed_enemy.connect(_on_enemy_slashed)
+		player.coin_collected.connect(_on_coin_collected)
+		player.slowdown_collected.connect(_on_slowdown_collected)
+		player.turn_executed.connect(_on_turn_executed)
 
 	# Setup ChronoController
 	chrono_controller.set_music_player(music_player)
-	chrono_controller.charges_changed.connect(_update_chrono_ui)
-	chrono_controller.slowdown_started.connect(func(_dur): slowmo_vignette.visible = true)
-	chrono_controller.slowdown_ended.connect(func(): slowmo_vignette.visible = false)
+	if not chrono_controller.charges_changed.is_connected(_update_chrono_ui):
+		chrono_controller.charges_changed.connect(_update_chrono_ui)
+		chrono_controller.slowdown_started.connect(func(_dur): slowmo_vignette.visible = true)
+		chrono_controller.slowdown_ended.connect(func(): slowmo_vignette.visible = false)
 	_update_chrono_ui(chrono_controller.charges)
 
-	# Build Track
-	track_gen.goal_reached.connect(_on_goal_reached)
+	# Build Track with track-specific palette
+	track_gen.apply_track_palette(track_palette)
+	if not track_gen.goal_reached.is_connected(_on_goal_reached):
+		track_gen.goal_reached.connect(_on_goal_reached)
 	track_gen.build_track_for_level(track_info)
 
 	# Start Music
@@ -95,10 +126,131 @@ func _ready() -> void:
 	if stream:
 		music_player.stream = stream
 		music_player.bus = "Music"
-		music_player.finished.connect(_on_music_finished)
-		music_player.play()
+		if not music_player.finished.is_connected(_on_music_finished):
+			music_player.finished.connect(_on_music_finished)
+		if music_player.is_inside_tree():
+			music_player.play()
 
-	_setup_chasing_spirits()
+	if chasing_spirits.is_empty():
+		_setup_chasing_spirits()
+
+func _init_spectrum_analyzer() -> void:
+	var music_idx = AudioServer.get_bus_index("Music")
+	if music_idx == -1:
+		AudioServer.add_bus()
+		music_idx = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(music_idx, "Music")
+
+	var eff_idx = -1
+	for i in range(AudioServer.get_bus_effect_count(music_idx)):
+		if AudioServer.get_bus_effect(music_idx, i) is AudioEffectSpectrumAnalyzer:
+			eff_idx = i
+			break
+	if eff_idx == -1:
+		var spec = AudioEffectSpectrumAnalyzer.new()
+		AudioServer.add_bus_effect(music_idx, spec)
+		eff_idx = AudioServer.get_bus_effect_count(music_idx) - 1
+
+	spectrum_analyzer = AudioServer.get_bus_effect_instance(music_idx, eff_idx)
+
+func _setup_level_background() -> void:
+	track_palette = TrackPaletteGenerator.generate_palette(track_info)
+	grid_speed_base = float(track_palette.get("grid_speed_base", 0.65))
+
+	if world_env and world_env.environment:
+		var env = world_env.environment
+		env.fog_light_color = track_palette.get("fog_color", Color(0.1, 0.12, 0.18))
+		env.ambient_light_color = track_palette.get("ambient_color", Color(0.2, 0.25, 0.35))
+		if env.sky and env.sky.sky_material is ShaderMaterial:
+			sky_material = env.sky.sky_material as ShaderMaterial
+			sky_material.set_shader_parameter("sky_top_color", track_palette["sky_top_color"])
+			sky_material.set_shader_parameter("sky_horizon_color", track_palette["sky_horizon_color"])
+			sky_material.set_shader_parameter("sun_top_color", track_palette["sun_top_color"])
+			sky_material.set_shader_parameter("sun_bottom_color", track_palette["sun_bottom_color"])
+			sky_material.set_shader_parameter("grid_primary_color", track_palette["grid_primary_color"])
+			sky_material.set_shader_parameter("grid_secondary_color", track_palette["grid_secondary_color"])
+			sky_material.set_shader_parameter("mountain_color", track_palette["mountain_color"])
+			sky_material.set_shader_parameter("mountain_rim_color", track_palette["mountain_rim_color"])
+			var seed_off = float(abs(int(track_palette.get("seed", 0)) % 1000)) * 0.01
+			sky_material.set_shader_parameter("track_seed_offset", seed_off)
+			sky_material.set_shader_parameter("bass_energy", 0.0)
+			sky_material.set_shader_parameter("mid_energy", 0.0)
+			sky_material.set_shader_parameter("high_energy", 0.0)
+			sky_material.set_shader_parameter("drop_intensity", 0.0)
+			sky_material.set_shader_parameter("chrono_blend", 0.0)
+			sky_material.set_shader_parameter("scroll_offset", 0.0)
+
+	if dir_light:
+		dir_light.light_color = track_palette.get("light_color", Color(0.65, 0.78, 0.95))
+
+func _update_reactive_background(delta: float) -> void:
+	var target_bass: float = 0.0
+	var target_mid: float = 0.0
+	var target_high: float = 0.0
+	var target_drop: float = 0.0
+
+	# 1. Sample live audio spectrum
+	if spectrum_analyzer:
+		var mag_bass = spectrum_analyzer.get_magnitude_for_frequency_range(20.0, 150.0).length()
+		var mag_mid = spectrum_analyzer.get_magnitude_for_frequency_range(150.0, 2000.0).length()
+		var mag_high = spectrum_analyzer.get_magnitude_for_frequency_range(2000.0, 10000.0).length()
+
+		target_bass = clamp(mag_bass * 3.0, 0.0, 1.5)
+		target_mid = clamp(mag_mid * 3.8, 0.0, 1.5)
+		target_high = clamp(mag_high * 4.8, 0.0, 1.5)
+
+	# 2. Sample precomputed 10Hz track waveform envelope for drop intensity & fallback
+	var wf: Dictionary = track_info.get("waveform", {})
+	var curr_time: float = music_player.get_playback_position() if (music_player and music_player.playing) else 0.0
+	var bucket_idx: int = int(curr_time * 10.0)
+	var rms_list: Array = wf.get("rms", [])
+	var low_list: Array = wf.get("low", [])
+	var high_list: Array = wf.get("high", [])
+
+	if bucket_idx >= 0 and bucket_idx < rms_list.size():
+		var wf_rms = float(rms_list[bucket_idx])
+		var wf_low = float(low_list[bucket_idx]) if bucket_idx < low_list.size() else wf_rms
+		var wf_high = float(high_list[bucket_idx]) if bucket_idx < high_list.size() else wf_rms * 0.5
+
+		target_bass = max(target_bass, wf_low * 1.35)
+		target_mid = max(target_mid, wf_rms * 1.25)
+		target_high = max(target_high, wf_high * 1.45)
+
+		var avg_rms: float = float(track_palette.get("avg_rms", 0.25))
+		if wf_rms > avg_rms * 1.15 or wf_low > 0.45:
+			target_drop = clamp((wf_rms - avg_rms) * 2.5 + max(0.0, wf_low - 0.4) * 1.5, 0.0, 1.2)
+
+	var attack = min(1.0, 26.0 * delta)
+	var decay = min(1.0, 7.5 * delta)
+
+	cur_bass = lerp(cur_bass, target_bass, attack if target_bass > cur_bass else decay)
+	cur_mid = lerp(cur_mid, target_mid, attack if target_mid > cur_mid else decay)
+	cur_high = lerp(cur_high, target_high, attack if target_high > cur_high else decay)
+	cur_drop = lerp(cur_drop, target_drop, min(1.0, 6.0 * delta))
+
+	var target_chrono: float = 1.0 if (chrono_controller and chrono_controller.is_slowed) else 0.0
+	cur_chrono = lerp(cur_chrono, target_chrono, min(1.0, 8.0 * delta))
+
+	var scroll_mult = (1.0 + cur_bass * 0.55 + cur_drop * 0.75) * lerp(1.0, 0.35, cur_chrono)
+	grid_scroll_offset += delta * grid_speed_base * scroll_mult
+
+	if sky_material:
+		sky_material.set_shader_parameter("bass_energy", cur_bass)
+		sky_material.set_shader_parameter("mid_energy", cur_mid)
+		sky_material.set_shader_parameter("high_energy", cur_high)
+		sky_material.set_shader_parameter("drop_intensity", cur_drop)
+		sky_material.set_shader_parameter("chrono_blend", cur_chrono)
+		sky_material.set_shader_parameter("scroll_offset", grid_scroll_offset)
+
+	if world_env and world_env.environment:
+		var base_fog: Color = track_palette.get("fog_color", Color(0.1, 0.12, 0.18))
+		var pri_col: Color = track_palette.get("grid_primary_color", Color(0.0, 0.9, 1.0))
+		var chrono_fog = Color(0.03, 0.22, 0.38)
+		world_env.environment.fog_light_color = base_fog.lerp(pri_col * 0.45, cur_drop * 0.35).lerp(chrono_fog, cur_chrono * 0.8)
+		world_env.environment.glow_bloom = 0.22 + cur_bass * 0.12 + cur_drop * 0.12
+
+	if track_gen:
+		track_gen.update_audio_reactivity(cur_bass, cur_drop, cur_chrono)
 
 func _setup_chasing_spirits() -> void:
 	var spirit_scene = load("res://assets/models/enemy_spirit.glb")
@@ -120,6 +272,7 @@ func _process(delta: float) -> void:
 		return
 
 	_update_camera(delta)
+	_update_reactive_background(delta)
 	_update_hud()
 	_update_turn_prompt(delta)
 	_update_chasing_spirits(delta)

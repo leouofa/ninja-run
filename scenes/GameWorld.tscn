@@ -1,17 +1,15 @@
-[gd_scene load_steps=7 format=3 uid="uid://c7k9w5e3f1q0a"]
+[gd_scene load_steps=8 format=3 uid="uid://c7k9w5e3f1q0a"]
 
 [ext_resource type="Script" path="res://scripts/GameWorld.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/WaveformTrackGenerator.gd" id="2_track"]
 [ext_resource type="Script" path="res://scripts/ChronoController.gd" id="3_chrono"]
+[ext_resource type="Shader" path="res://shaders/level_synthwave_sky.gdshader" id="4_sky_shader"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_night"]
-sky_top_color = Color(0.04, 0.06, 0.12, 1)
-sky_horizon_color = Color(0.12, 0.15, 0.22, 1)
-ground_bottom_color = Color(0.02, 0.03, 0.05, 1)
-ground_horizon_color = Color(0.08, 0.1, 0.15, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_synth_sky"]
+shader = ExtResource("4_sky_shader")
 
 [sub_resource type="Sky" id="Sky_night"]
-sky_material = SubResource("ProceduralSkyMaterial_night")
+sky_material = SubResource("ShaderMaterial_synth_sky")
 
 [sub_resource type="Environment" id="Environment_japan_night"]
 background_mode = 2
@@ -20,10 +18,11 @@ ambient_light_source = 2
 ambient_light_color = Color(0.2, 0.25, 0.35, 1)
 tonemap_mode = 2
 glow_enabled = true
-glow_bloom = 0.2
+glow_bloom = 0.25
 fog_enabled = true
 fog_light_color = Color(0.1, 0.12, 0.18, 1)
-fog_density = 0.008
+fog_density = 0.006
+fog_sky_affect = 0.12
 
 [node name="GameWorld" type="Node3D"]
 script = ExtResource("1_world")

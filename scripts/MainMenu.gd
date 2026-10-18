@@ -346,7 +346,8 @@ func _play_random_bgm() -> void:
 	if stream:
 		bgm_player.stream = stream
 		bgm_player.bus = "Music"
-		bgm_player.play()
+		if bgm_player.is_inside_tree():
+			bgm_player.play()
 
 func _on_bgm_finished() -> void:
 	_play_random_bgm()
