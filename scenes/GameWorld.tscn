@@ -240,19 +240,22 @@ horizontal_alignment = 1
 [node name="NextLevelBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
 custom_minimum_size = Vector2(220, 45)
 layout_mode = 2
+mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
-text = "Next Level ➔"
+text = "Next Level"
 
 [node name="ReplayBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
 custom_minimum_size = Vector2(220, 40)
 layout_mode = 2
+mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 text = "Replay Level"
 
 [node name="LevelSelectBtn" type="Button" parent="HUD/VictoryPanel/VBox"]
 custom_minimum_size = Vector2(220, 40)
 layout_mode = 2
+mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 text = "Level Select"
 
@@ -299,13 +302,15 @@ horizontal_alignment = 1
 [node name="RetryBtn" type="Button" parent="HUD/GameOverPanel/VBox"]
 custom_minimum_size = Vector2(220, 45)
 layout_mode = 2
+mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
-text = "⚔ Retry Level"
+text = "Retry Level"
 
 [node name="LevelSelectBtn2" type="Button" parent="HUD/GameOverPanel/VBox"]
 custom_minimum_size = Vector2(220, 40)
 layout_mode = 2
+mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 text = "Level Select"
 

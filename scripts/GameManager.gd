@@ -28,6 +28,37 @@ func _ready() -> void:
 	_load_waveforms()
 	_build_level_list()
 	_load_save_data()
+	_setup_button_listeners()
+
+func _setup_button_listeners() -> void:
+	get_tree().node_added.connect(_on_tree_node_added)
+	_scan_for_buttons(get_tree().root)
+
+func _scan_for_buttons(node: Node) -> void:
+	if not node:
+		return
+	if node is Button:
+		_configure_button(node)
+	for child in node.get_children():
+		_scan_for_buttons(child)
+
+func _on_tree_node_added(node: Node) -> void:
+	if node is Button:
+		_configure_button(node)
+
+func _configure_button(btn: Button) -> void:
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	if not btn.mouse_entered.is_connected(_on_button_hover):
+		btn.mouse_entered.connect(_on_button_hover)
+	if not btn.pressed.is_connected(_on_button_click):
+		btn.pressed.connect(_on_button_click)
+
+func _on_button_hover() -> void:
+	SoundEffects.play_sound(get_tree(), "ui_hover")
+
+func _on_button_click() -> void:
+	SoundEffects.play_sound(get_tree(), "ui_click")
+
 
 func _setup_input_actions() -> void:
 	var actions = {
