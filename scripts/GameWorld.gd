@@ -222,8 +222,9 @@ func _on_coin_collected(val: int) -> void:
 	coins += 1
 	score += val * combo
 
-func _on_slowdown_collected() -> void:
+func _on_slowdown_collected(val: int = 150) -> void:
 	chrono_controller.add_charge()
+	score += val * combo
 
 func _on_turn_executed(_dir: int) -> void:
 	var gained = 250 * combo
@@ -246,13 +247,45 @@ func _on_goal_reached() -> void:
 	game_ended = true
 	chrono_controller.deactivate_slowdown()
 	SoundEffects.play_sound(get_tree(), "coin")
+
+	var record_info: Dictionary = {
+		"is_new_high_score": false,
+		"prev_high_score": 0,
+		"score_diff": 0,
+		"is_new_max_kills": false,
+		"prev_max_kills": 0,
+		"kills_diff": 0,
+		"high_score": score,
+		"max_kills": yokai_slain
+	}
 	var gm = get_node_or_null("/root/GameManager")
 	if gm:
-		gm.record_completion(track_name, score, combo)
+		record_info = gm.record_completion(track_name, score, combo, yokai_slain)
 
 	victory_panel.visible = true
-	victory_stats.text = "Final Score: %d\nCoins: %d | Yōkai Slain: %d\nMax Combo: x%d\nTrack Duration: %s" % [
-		score, coins, yokai_slain, combo, time_lbl.text
+
+	var hs_line = ""
+	if record_info.get("is_new_high_score", false):
+		if record_info.get("prev_high_score", 0) > 0:
+			hs_line = "★ NEW HIGH SCORE! (+%d over prev %d) ★" % [record_info["score_diff"], record_info["prev_high_score"]]
+		else:
+			hs_line = "★ FIRST CLEAR HIGH SCORE! ★"
+	else:
+		var best = record_info.get("high_score", score)
+		var behind = best - score
+		hs_line = "High Score: %d (%d behind record)" % [best, behind]
+
+	var kills_line = "Yōkai Slain: %d" % yokai_slain
+	if record_info.get("is_new_max_kills", false):
+		if record_info.get("prev_max_kills", 0) > 0:
+			kills_line += " (★ NEW RECORD! +%d ★)" % record_info["kills_diff"]
+		else:
+			kills_line += " (★ NEW RECORD! ★)"
+	else:
+		kills_line += " (Record: %d)" % record_info.get("max_kills", yokai_slain)
+
+	victory_stats.text = "%s\nFinal Score: %d\nCoins: %d | %s\nMax Combo: x%d | Track Time: %s" % [
+		hs_line, score, coins, kills_line, combo, time_lbl.text
 	]
 
 func _on_player_died(reason: String) -> void:
@@ -265,13 +298,44 @@ func _on_player_died(reason: String) -> void:
 
 	var curr_time = music_player.get_playback_position()
 	var pct = clampf((curr_time / duration) * 100.0, 0.0, 99.9)
+
+	var record_info: Dictionary = {
+		"is_new_high_score": false,
+		"prev_high_score": 0,
+		"score_diff": 0,
+		"is_new_max_kills": false,
+		"prev_max_kills": 0,
+		"kills_diff": 0,
+		"high_score": score,
+		"max_kills": yokai_slain
+	}
 	var gm = get_node_or_null("/root/GameManager")
 	if gm:
-		gm.record_failure(track_name, pct, reason)
+		record_info = gm.record_failure(track_name, pct, reason, score, yokai_slain)
 
 	game_over_panel.visible = true
 	death_reason_lbl.text = "DEFEAT: %s" % reason
-	death_pct_lbl.text = "Track Completed: %.1f%%\nScore: %d | Yōkai Slain: %d" % [pct, score, yokai_slain]
+
+	var hs_line = ""
+	if record_info.get("is_new_high_score", false):
+		if record_info.get("prev_high_score", 0) > 0:
+			hs_line = "★ NEW HIGH SCORE! (+%d) ★\n" % record_info["score_diff"]
+		else:
+			hs_line = "★ NEW HIGH SCORE! ★\n"
+	else:
+		var best = record_info.get("high_score", score)
+		var behind = best - score
+		hs_line = "High Score: %d (%d behind)\n" % [best, behind]
+
+	var kills_line = "Yōkai Slain: %d" % yokai_slain
+	if record_info.get("is_new_max_kills", false):
+		kills_line += " (★ NEW RECORD! ★)"
+	else:
+		kills_line += " (Record: %d)" % record_info.get("max_kills", yokai_slain)
+
+	death_pct_lbl.text = "%sTrack Completed: %.1f%%\nScore: %d | %s" % [
+		hs_line, pct, score, kills_line
+	]
 
 # Button Callbacks
 func _on_next_level_pressed() -> void:

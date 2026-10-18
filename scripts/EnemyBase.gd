@@ -61,15 +61,25 @@ func on_slashed() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	var found_player = false
 	if is_inside_tree() and get_tree():
 		SoundEffects.play_sound(get_tree(), "enemy_kill")
 		var players = get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
 			var player = players[0]
+			found_player = true
 			if player.has_method("record_slashed_enemy"):
 				player.record_slashed_enemy(enemy_type, point_value)
 			else:
 				player.slashed_enemy.emit(enemy_type, point_value)
+	if not found_player and get_parent():
+		for child in get_parent().get_children():
+			if child.is_in_group("player"):
+				if child.has_method("record_slashed_enemy"):
+					child.record_slashed_enemy(enemy_type, point_value)
+				else:
+					child.slashed_enemy.emit(enemy_type, point_value)
+				break
 
 
 	# Death burst animation
@@ -98,5 +108,20 @@ func _on_body_entered(body: Node3D) -> void:
 			body.trigger_death("Struck down by cursed " + enemy_type.capitalize())
 		else:
 			body.trigger_stumble()
-			# Disperse the enemy after stumble
-			on_slashed()
+			# Disperse the enemy after stumble without awarding kill or points
+			disperse()
+
+func disperse() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	if visual_mesh:
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(visual_mesh, "scale", Vector3(0.01, 0.01, 0.01), 0.15)
+		tween.tween_property(visual_mesh, "position:y", visual_mesh.position.y + 0.8, 0.15)
+		tween.chain().tween_callback(queue_free)
+	else:
+		queue_free()

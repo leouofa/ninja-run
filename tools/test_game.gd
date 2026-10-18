@@ -182,8 +182,157 @@ func _init() -> void:
 	else:
 		print("[FAIL] ninja did not enter QTE turn state.")
 		failed += 1
-	tz.queue_free()
-	ninja.queue_free()
+	# 8. Test High Score & Max Kills Tracking and Comparison
+	var test_track = "test_soundtrack_run.mp3"
+	# Run 1: First victory clear
+	var run1 = gm.record_completion(test_track, 5000, 2, 10)
+	if run1["is_new_high_score"] and gm.get_high_score(test_track) == 5000 and gm.get_max_kills(test_track) == 10:
+		print("[PASS] Run 1: First victory clear saved High Score 5000 and Max Kills 10.")
+		passed += 1
+	else:
+		print("[FAIL] Run 1 failed to record initial high score or max kills.")
+		failed += 1
+
+	# Run 2: Lower score and kills on defeat compares against existing high score
+	var run2 = gm.record_failure(test_track, 45.0, "Stumbled", 3200, 6)
+	if not run2["is_new_high_score"] and run2["score_diff"] == -1800 and not run2["is_new_max_kills"] and run2["kills_diff"] == -4:
+		print("[PASS] Run 2: Defeat correctly detected lower score (-1800 behind) and preserved records.")
+		passed += 1
+	else:
+		print("[FAIL] Run 2 score comparison failed: ", run2)
+		failed += 1
+
+	# Run 3: Defeat with higher score and higher kills updates both records
+	var run3 = gm.record_failure(test_track, 85.0, "Abyss", 7500, 16)
+	if run3["is_new_high_score"] and run3["score_diff"] == 2500 and run3["is_new_max_kills"] and run3["kills_diff"] == 6:
+		print("[PASS] Run 3: Defeat with improved play established NEW HIGH SCORE (+2500) and NEW MAX KILLS (+6).")
+		passed += 1
+	else:
+		print("[FAIL] Run 3 high score update on defeat failed: ", run3)
+		failed += 1
+
+	# 9. Test Pickup Point Contributions (Koban: 100 * combo, Slowdown: 150 * combo)
+	var coin_pickup = Pickup.new()
+	coin_pickup.pickup_type = "koban"
+	var slow_pickup = Pickup.new()
+	slow_pickup.pickup_type = "slowdown"
+	root.add_child(coin_pickup)
+	root.add_child(slow_pickup)
+
+	var pninja = PlayerNinja.new()
+	root.add_child(pninja)
+	var pickup_state = {"coin": 0, "slow": 0}
+	pninja.coin_collected.connect(func(val): pickup_state["coin"] = val)
+	pninja.slowdown_collected.connect(func(val): pickup_state["slow"] = val)
+
+	coin_pickup._on_body_entered(pninja)
+	slow_pickup._on_body_entered(pninja)
+
+	if pickup_state["coin"] == 100 and pickup_state["slow"] == 150:
+		print("[PASS] Pickups contribute correct base points: Koban = 100, Chrono Slowdown = 150.")
+		passed += 1
+	else:
+		print("[FAIL] Pickup point values mismatch: coin=%d (expected 100), slow=%d (expected 150)" % [pickup_state["coin"], pickup_state["slow"]])
+		failed += 1
+
+	coin_pickup.queue_free()
+	slow_pickup.queue_free()
+	pninja.queue_free()
+
+	# 10. Test Enemy Katana Slash vs Collision Stumble
+	var slash_ninja = PlayerNinja.new()
+	slash_ninja.add_to_group("player")
+	root.add_child(slash_ninja)
+	var combat_state = {"kills": 0}
+	slash_ninja.slashed_enemy.connect(func(_name, _pts): combat_state["kills"] += 1)
+
+	var slayed_enemy = EnemyBase.new()
+	slayed_enemy.enemy_type = "skeleton"
+	root.add_child(slayed_enemy)
+	slayed_enemy.on_slashed()
+
+	var stumbled_enemy = EnemyBase.new()
+	stumbled_enemy.enemy_type = "spirit"
+	root.add_child(stumbled_enemy)
+	stumbled_enemy.disperse()
+
+	if combat_state["kills"] == 1 and slayed_enemy.is_dead and stumbled_enemy.is_dead:
+		print("[PASS] Slashed enemy counted toward kills/score; stumbled dispersed enemy did not award kills.")
+		passed += 1
+	else:
+		print("[FAIL] Enemy slash vs disperse count mismatch: enemies_slain_count=%d" % combat_state["kills"])
+		failed += 1
+
+	slayed_enemy.queue_free()
+	stumbled_enemy.queue_free()
+	slash_ninja.queue_free()
+
+	# 11. Test MainMenu High Scores UI and Navigation
+	var menu_scene = load("res://scenes/MainMenu.tscn")
+	var menu = menu_scene.instantiate()
+	root.add_child(menu)
+	menu._ready()
+
+	var lvl_btn = menu.get_node_or_null("MarginContainer/TitleScreen/LevelSelectBtn")
+	var exit_btn = menu.get_node_or_null("MarginContainer/TitleScreen/ExitBtn")
+	var hs_btn = menu.get_node_or_null("MarginContainer/TitleScreen/HighScoresBtn")
+	var lvl_screen = menu.get_node_or_null("MarginContainer/LevelSelectScreen")
+	var lvl_headers = menu.get_node_or_null("MarginContainer/LevelSelectScreen/TableHeaders")
+	var lvl_list = menu.get_node_or_null("MarginContainer/LevelSelectScreen/ScrollContainer/LevelList")
+	var hs_screen = menu.get_node_or_null("MarginContainer/HighScoresScreen")
+	var hs_headers = menu.get_node_or_null("MarginContainer/HighScoresScreen/TableHeaders")
+	var hs_list = menu.get_node_or_null("MarginContainer/HighScoresScreen/ScrollContainer/HighScoreList")
+
+	if lvl_btn and exit_btn and hs_btn and lvl_screen and lvl_headers and lvl_list and hs_screen and hs_headers and hs_list:
+		var labels_ok = (lvl_btn.text == "Select Level") and exit_btn.text.begins_with("Exit")
+
+		# Test Level Select Screen
+		menu._on_level_select_pressed()
+		var lvl_items_count = lvl_list.get_child_count()
+		var lvl_actions_ok = true
+		for row in lvl_list.get_children():
+			var hbox = row.get_child(0) if row.get_child_count() > 0 else null
+			if hbox:
+				var actions = hbox.get_child(hbox.get_child_count() - 1)
+				if not (actions is HBoxContainer and actions.get_child_count() == 2):
+					lvl_actions_ok = false
+
+		# Test High Scores Screen
+		menu._on_high_scores_pressed()
+		var hs_items_count = hs_list.get_child_count()
+
+		# Check that rows have no Play buttons and no inline 'Score:' or 'Kills:' text
+		var no_play_buttons = true
+		var clean_counters = true
+		for row in hs_list.get_children():
+			var hbox = row.get_child(0) if row.get_child_count() > 0 else null
+			if hbox:
+				for child in hbox.get_children():
+					if child is Button:
+						no_play_buttons = false
+					if child is Label:
+						if "Score:" in child.text or "Kills:" in child.text:
+							clean_counters = false
+
+		var ok = labels_ok and lvl_items_count == 36 and lvl_actions_ok and hs_items_count == 36 and no_play_buttons and clean_counters
+		if ok:
+			print("[PASS] MainMenu UI verified: table headers, clean counters, full-width layouts for both LevelSelect & HighScores.")
+			passed += 1
+		else:
+			print("[FAIL] MainMenu UI mismatch (labels_ok=%s, lvl_items=%d, lvl_actions=%s, hs_items=%d, no_buttons=%s, clean_counters=%s)" % [
+				labels_ok, lvl_items_count, lvl_actions_ok, hs_items_count, no_play_buttons, clean_counters
+			])
+			failed += 1
+	else:
+		print("[FAIL] MainMenu missing expected buttons, headers, or screen containers.")
+		failed += 1
+
+	menu.queue_free()
+
+	# Clean test key from save data
+	gm.save_data["high_scores"].erase(test_track)
+	gm.save_data["max_kills"].erase(test_track)
+	gm._save_data_to_disk()
 
 	if created_gm and is_instance_valid(gm):
 		gm.queue_free()
