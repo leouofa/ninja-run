@@ -62,6 +62,8 @@ func _populate_levels() -> void:
 		# Index / Title label
 		var title_lbl = Label.new()
 		title_lbl.custom_minimum_size = Vector2(280, 40)
+		title_lbl.clip_text = true
+		title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var is_comp = gm.save_data["completed_tracks"].has(item["filename"])
 		var comp_mark = " ✓" if is_comp else ""
 		title_lbl.text = "%d. %s%s" % [i + 1, item["title"], comp_mark]
@@ -156,7 +158,9 @@ func _populate_high_scores() -> void:
 
 		# Index / Title
 		var title_lbl = Label.new()
-		title_lbl.custom_minimum_size = Vector2(280, 40)
+		title_lbl.custom_minimum_size = Vector2(340, 40)
+		title_lbl.clip_text = true
+		title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var is_comp = gm.save_data.get("completed_tracks", []).has(item["filename"])
 		var comp_mark = " ✓" if is_comp else ""
 		title_lbl.text = "%d. %s%s" % [i + 1, item["title"], comp_mark]
@@ -167,26 +171,15 @@ func _populate_high_scores() -> void:
 		var dur_lbl = Label.new()
 		var m = int(floor(item["duration"] / 60.0))
 		var s = int(item["duration"]) % 60
-		dur_lbl.custom_minimum_size = Vector2(60, 40)
+		dur_lbl.custom_minimum_size = Vector2(70, 40)
 		dur_lbl.text = "%02d:%02d" % [m, s]
 		dur_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h_box.add_child(dur_lbl)
 
-		# Difficulty Stars
-		var diff_lbl = Label.new()
-		diff_lbl.custom_minimum_size = Vector2(70, 40)
-		var stars = ""
-		for star in range(item["difficulty"]):
-			stars += "★"
-		diff_lbl.text = stars
-		diff_lbl.modulate = Color(1.0, 0.8, 0.2)
-		diff_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		h_box.add_child(diff_lbl)
-
 		# High Score
 		var hs = gm.get_high_score(item["filename"])
 		var hs_lbl = Label.new()
-		hs_lbl.custom_minimum_size = Vector2(140, 40)
+		hs_lbl.custom_minimum_size = Vector2(150, 40)
 		hs_lbl.text = "Score: %d" % hs
 		hs_lbl.modulate = Color(0.4, 1.0, 0.5) if hs > 0 else Color(0.55, 0.55, 0.6)
 		hs_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -203,7 +196,7 @@ func _populate_high_scores() -> void:
 
 		# Completion Status
 		var status_lbl = Label.new()
-		status_lbl.custom_minimum_size = Vector2(130, 40)
+		status_lbl.custom_minimum_size = Vector2(140, 40)
 		if is_comp:
 			status_lbl.text = "Torii Cleared"
 			status_lbl.modulate = Color(0.3, 0.9, 1.0)
