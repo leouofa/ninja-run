@@ -48,7 +48,7 @@ func _load_model() -> void:
 	col.position = Vector3(0, box.size.y * 0.5, 0)
 	add_child(col)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if is_dead:
 		return
 	# Idle yōkai bobbing / floating animation
@@ -64,7 +64,12 @@ func on_slashed() -> void:
 		SoundEffects.play_sound(get_tree(), "enemy_kill")
 		var players = get_tree().get_nodes_in_group("player")
 		if players.size() > 0:
-			players[0].emit_signal("slashed_enemy", enemy_type, point_value)
+			var player = players[0]
+			if player.has_method("record_slashed_enemy"):
+				player.record_slashed_enemy(enemy_type, point_value)
+			else:
+				player.slashed_enemy.emit(enemy_type, point_value)
+
 
 	# Death burst animation
 	if visual_mesh:

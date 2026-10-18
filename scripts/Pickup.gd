@@ -5,6 +5,8 @@ extends Area3D
 @export var pickup_type: String = "koban" # koban (coin), slowdown (Toki-no-Tama)
 var visual_mesh: Node3D
 
+var is_collected: bool = false
+
 func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 1
@@ -30,16 +32,30 @@ func _process(delta: float) -> void:
 		visual_mesh.position.y = 0.9 + sin(Time.get_ticks_msec() * 0.006) * 0.15
 
 func _on_body_entered(body: Node3D) -> void:
+	if is_collected:
+		return
 	if body is PlayerNinja:
+		is_collected = true
 		if pickup_type == "slowdown":
 			SoundEffects.play_sound(get_tree(), "slow_start")
-			body.emit_signal("slowdown_collected")
+			if body.has_method("collect_slowdown"):
+				body.collect_slowdown()
+			else:
+				body.slowdown_collected.emit()
 		else:
 			SoundEffects.play_sound(get_tree(), "coin")
-			body.emit_signal("coin_collected", 100)
+			if body.has_method("collect_coin"):
+				body.collect_coin(100)
+			else:
+				body.coin_collected.emit(100)
 
-		# Vanish pickup with tween
+		# Disable monitoring and collisions immediately
+		set_deferred("monitoring", false)
+		set_deferred("monitorable", false)
+
+		# Vanish pickup with scale animation
 		var tween = create_tween()
-		tween.tween_property(self, "scale", Vector3(1.5, 1.5, 1.5), 0.1)
-		tween.parallel().tween_property(self, "modulate:a", 0.0, 0.1)
+		tween.tween_property(self, "scale", Vector3(1.3, 1.3, 1.3), 0.08)
+		tween.tween_property(self, "scale", Vector3.ZERO, 0.08)
 		tween.tween_callback(queue_free)
+
