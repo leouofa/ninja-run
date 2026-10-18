@@ -36,14 +36,17 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if body is PlayerNinja:
 		is_collected = true
+		var tree = get_tree() if (is_inside_tree() and get_tree()) else null
 		if pickup_type == "slowdown":
-			SoundEffects.play_sound(get_tree(), "slow_start")
+			if tree:
+				SoundEffects.play_sound(tree, "slow_start")
 			if body.has_method("collect_slowdown"):
-				body.collect_slowdown()
+				body.collect_slowdown(150)
 			else:
-				body.slowdown_collected.emit()
+				body.slowdown_collected.emit(150)
 		else:
-			SoundEffects.play_sound(get_tree(), "coin")
+			if tree:
+				SoundEffects.play_sound(tree, "coin")
 			if body.has_method("collect_coin"):
 				body.collect_coin(100)
 			else:

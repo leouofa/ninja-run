@@ -77,6 +77,14 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "Select Level (36 Tracks)"
 
+[node name="HighScoresBtn" type="Button" parent="MarginContainer/TitleScreen"]
+custom_minimum_size = Vector2(280, 50)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "High Scores"
+
 [node name="ControlsLegend" type="Label" parent="MarginContainer/TitleScreen"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.7, 0.75, 1)
@@ -116,6 +124,39 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
+[node name="HighScoresScreen" type="VBoxContainer" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/HighScoresScreen"]
+layout_mode = 2
+
+[node name="BackBtn" type="Button" parent="MarginContainer/HighScoresScreen/Header"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "Back"
+
+[node name="HeaderTitle" type="Label" parent="MarginContainer/HighScoresScreen/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 26
+text = "HIGH SCORES & RECORDS"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HighScoresScreen"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HighScoreList" type="VBoxContainer" parent="MarginContainer/HighScoresScreen/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
 [connection signal="pressed" from="MarginContainer/TitleScreen/CampaignBtn" to="." method="_on_campaign_pressed"]
 [connection signal="pressed" from="MarginContainer/TitleScreen/LevelSelectBtn" to="." method="_on_level_select_pressed"]
+[connection signal="pressed" from="MarginContainer/TitleScreen/HighScoresBtn" to="." method="_on_high_scores_pressed"]
 [connection signal="pressed" from="MarginContainer/LevelSelectScreen/Header/BackBtn" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="MarginContainer/HighScoresScreen/Header/BackBtn" to="." method="_on_back_pressed"]

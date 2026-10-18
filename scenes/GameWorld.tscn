@@ -211,16 +211,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -170.0
-offset_right = 220.0
-offset_bottom = 170.0
+offset_left = -240.0
+offset_top = -195.0
+offset_right = 240.0
+offset_bottom = 195.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="HUD/VictoryPanel"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="Title" type="Label" parent="HUD/VictoryPanel/VBox"]
@@ -267,10 +267,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -160.0
-offset_right = 220.0
-offset_bottom = 160.0
+offset_left = -240.0
+offset_top = -195.0
+offset_right = 240.0
+offset_bottom = 195.0
 grow_horizontal = 2
 grow_vertical = 2
 

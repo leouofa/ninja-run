@@ -6,7 +6,7 @@ signal died(reason: String)
 signal stumbled()
 signal slashed_enemy(enemy_name: String, points: int)
 signal coin_collected(value: int)
-signal slowdown_collected()
+signal slowdown_collected(value: int)
 signal turn_executed(direction: int)
 
 const LANE_WIDTH: float = 3.6
@@ -339,8 +339,8 @@ func exit_turn_zone(zone: TurnZone) -> void:
 func collect_coin(value: int) -> void:
 	coin_collected.emit(value)
 
-func collect_slowdown() -> void:
-	slowdown_collected.emit()
+func collect_slowdown(value: int = 150) -> void:
+	slowdown_collected.emit(value)
 
 func record_slashed_enemy(enemy_name: String, points: int) -> void:
 	slashed_enemy.emit(enemy_name, points)

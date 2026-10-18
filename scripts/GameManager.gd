@@ -16,6 +16,7 @@ var current_track_name: String = ""
 # Player Save state
 var save_data: Dictionary = {
 	"high_scores": {},
+	"max_kills": {},
 	"best_percentages": {},
 	"completed_tracks": [],
 	"unlocked_campaign_index": 0
@@ -31,8 +32,11 @@ func _ready() -> void:
 	_setup_button_listeners()
 
 func _setup_button_listeners() -> void:
+	if not is_inside_tree() or not get_tree():
+		return
 	get_tree().node_added.connect(_on_tree_node_added)
-	_scan_for_buttons(get_tree().root)
+	if get_tree().root:
+		_scan_for_buttons(get_tree().root)
 
 func _scan_for_buttons(node: Node) -> void:
 	if not node:
@@ -209,31 +213,66 @@ func advance_to_next_level() -> void:
 func return_to_main_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
-func record_completion(track_name: String, score: int, max_combo: int) -> void:
-	if not save_data["completed_tracks"].has(track_name):
-		save_data["completed_tracks"].append(track_name)
-	var prev_score = save_data["high_scores"].get(track_name, 0)
-	if score > prev_score:
+func get_high_score(track_name: String) -> int:
+	return save_data.get("high_scores", {}).get(track_name, 0)
+
+func get_max_kills(track_name: String) -> int:
+	return save_data.get("max_kills", {}).get(track_name, 0)
+
+func record_run_result(track_name: String, score: int, kills: int, completed: bool, percentage: float, combo: int = 1, reason: String = "") -> Dictionary:
+	if not save_data.has("high_scores"):
+		save_data["high_scores"] = {}
+	if not save_data.has("max_kills"):
+		save_data["max_kills"] = {}
+
+	var prev_score = get_high_score(track_name)
+	var prev_kills = get_max_kills(track_name)
+	var is_new_high_score = score > prev_score
+	var is_new_max_kills = kills > prev_kills
+
+	if is_new_high_score:
 		save_data["high_scores"][track_name] = score
-	save_data["best_percentages"][track_name] = 100.0
+	if is_new_max_kills:
+		save_data["max_kills"][track_name] = kills
 
-	var curr_idx = 0
-	for i in range(level_list.size()):
-		if level_list[i]["filename"] == track_name:
-			curr_idx = i
-			break
-	if curr_idx + 1 > save_data["unlocked_campaign_index"]:
-		save_data["unlocked_campaign_index"] = curr_idx + 1
+	if completed:
+		if not save_data["completed_tracks"].has(track_name):
+			save_data["completed_tracks"].append(track_name)
+		save_data["best_percentages"][track_name] = 100.0
+
+		var curr_idx = 0
+		for i in range(level_list.size()):
+			if level_list[i]["filename"] == track_name:
+				curr_idx = i
+				break
+		if curr_idx + 1 > save_data["unlocked_campaign_index"]:
+			save_data["unlocked_campaign_index"] = curr_idx + 1
+
+		emit_signal("level_completed", track_name, score, combo)
+	else:
+		var prev_pct = save_data["best_percentages"].get(track_name, 0.0)
+		if percentage > prev_pct:
+			save_data["best_percentages"][track_name] = percentage
+		emit_signal("level_failed", track_name, percentage, reason)
 
 	_save_data_to_disk()
-	emit_signal("level_completed", track_name, score, max_combo)
 
-func record_failure(track_name: String, percentage: float, reason: String) -> void:
-	var prev_pct = save_data["best_percentages"].get(track_name, 0.0)
-	if percentage > prev_pct:
-		save_data["best_percentages"][track_name] = percentage
-	_save_data_to_disk()
-	emit_signal("level_failed", track_name, percentage, reason)
+	return {
+		"is_new_high_score": is_new_high_score,
+		"prev_high_score": prev_score,
+		"score_diff": score - prev_score,
+		"is_new_max_kills": is_new_max_kills,
+		"prev_max_kills": prev_kills,
+		"kills_diff": kills - prev_kills,
+		"high_score": save_data["high_scores"].get(track_name, score),
+		"max_kills": save_data["max_kills"].get(track_name, kills)
+	}
+
+func record_completion(track_name: String, score: int, max_combo: int, kills: int = 0) -> Dictionary:
+	return record_run_result(track_name, score, kills, true, 100.0, max_combo)
+
+func record_failure(track_name: String, percentage: float, reason: String, score: int = 0, kills: int = 0) -> Dictionary:
+	return record_run_result(track_name, score, kills, false, percentage, 1, reason)
 
 func _save_data_to_disk() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -248,3 +287,7 @@ func _load_save_data() -> void:
 			if json.data is Dictionary:
 				for k in json.data.keys():
 					save_data[k] = json.data[k]
+	if not save_data.has("max_kills"):
+		save_data["max_kills"] = {}
+	if not save_data.has("high_scores"):
+		save_data["high_scores"] = {}
