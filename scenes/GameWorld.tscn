@@ -1,10 +1,11 @@
-[gd_scene load_steps=10 format=3 uid="uid://c7k9w5e3f1q0a"]
+[gd_scene load_steps=11 format=3 uid="uid://c7k9w5e3f1q0a"]
 
 [ext_resource type="Script" path="res://scripts/GameWorld.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/WaveformTrackGenerator.gd" id="2_track"]
 [ext_resource type="Script" path="res://scripts/ChronoController.gd" id="3_chrono"]
 [ext_resource type="Shader" path="res://shaders/level_synthwave_sky.gdshader" id="4_sky_shader"]
 [ext_resource type="Shader" path="res://shaders/psychedelic_postfx.gdshader" id="5_postfx_shader"]
+[ext_resource type="Script" path="res://scripts/PauseMenu.gd" id="6_pause"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_synth_sky"]
 shader = ExtResource("4_sky_shader")
@@ -333,6 +334,119 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
 text = "Level Select"
+
+[node name="PauseMenu" type="Control" parent="HUD"]
+process_mode = 3
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_pause")
+
+[node name="DimOverlay" type="ColorRect" parent="HUD/PauseMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.05, 0.09, 0.78)
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/PauseMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -170.0
+offset_right = 220.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/PauseMenu/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="HUD/PauseMenu/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="TrackLabel" type="Label" parent="HUD/PauseMenu/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "Track: Tokyo Drift"
+horizontal_alignment = 1
+
+[node name="MainButtons" type="VBoxContainer" parent="HUD/PauseMenu/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="HUD/PauseMenu/PanelContainer/VBox/MainButtons"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 17
+text = "Resume"
+
+[node name="RestartBtn" type="Button" parent="HUD/PauseMenu/PanelContainer/VBox/MainButtons"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 17
+text = "Restart Level"
+
+[node name="MainMenuBtn" type="Button" parent="HUD/PauseMenu/PanelContainer/VBox/MainButtons"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 17
+text = "Main Menu"
+
+[node name="ConfirmBox" type="VBoxContainer" parent="HUD/PauseMenu/PanelContainer/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="ConfirmPrompt" type="Label" parent="HUD/PauseMenu/PanelContainer/VBox/ConfirmBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "Restart level? Current progress will be lost."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ConfirmBtn" type="Button" parent="HUD/PauseMenu/PanelContainer/VBox/ConfirmBox"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 17
+text = "Confirm"
+
+[node name="CancelBtn" type="Button" parent="HUD/PauseMenu/PanelContainer/VBox/ConfirmBox"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 17
+text = "Cancel"
 
 [connection signal="pressed" from="HUD/VictoryPanel/VBox/NextLevelBtn" to="." method="_on_next_level_pressed"]
 [connection signal="pressed" from="HUD/VictoryPanel/VBox/ReplayBtn" to="." method="_on_replay_pressed"]

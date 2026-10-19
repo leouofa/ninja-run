@@ -21,6 +21,7 @@ extends Node3D
 @onready var chrono_bar: ProgressBar = $HUD/BottomLeft/ChronoBar
 @onready var postfx_rect: ColorRect = $HUD/PsychedelicPostFX
 @onready var slowmo_vignette: ColorRect = $HUD/SlowmoVignette
+@onready var pause_menu: Control = $HUD/PauseMenu
 
 # Victory & Game Over Screens
 @onready var victory_panel: PanelContainer = $HUD/VictoryPanel
@@ -66,6 +67,8 @@ func _get_gm() -> Node:
 func _ready() -> void:
 	# Reset state
 	Engine.time_scale = 1.0
+	if is_inside_tree() and get_tree():
+		get_tree().paused = false
 	victory_panel.visible = false
 	game_over_panel.visible = false
 	turn_prompt.visible = false
@@ -134,6 +137,9 @@ func _ready() -> void:
 
 	if chasing_spirits.is_empty():
 		_setup_chasing_spirits()
+
+	if pause_menu:
+		pause_menu.setup(self, music_player)
 
 func _init_spectrum_analyzer() -> void:
 	var music_idx = AudioServer.get_bus_index("Music")
@@ -429,6 +435,8 @@ func _on_goal_reached() -> void:
 	if game_ended:
 		return
 	game_ended = true
+	if pause_menu and pause_menu.visible:
+		pause_menu.resume_game()
 	chrono_controller.deactivate_slowdown()
 	SoundEffects.play_sound(get_tree(), "coin")
 
@@ -476,6 +484,8 @@ func _on_player_died(reason: String) -> void:
 	if game_ended:
 		return
 	game_ended = true
+	if pause_menu and pause_menu.visible:
+		pause_menu.resume_game()
 	chrono_controller.deactivate_slowdown()
 	if music_player.playing:
 		music_player.stop()

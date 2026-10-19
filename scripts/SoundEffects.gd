@@ -6,6 +6,7 @@ static func play_sound(tree: SceneTree, type: String) -> void:
 	if not tree or not tree.root:
 		return
 	var player = AudioStreamPlayer.new()
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
 	player.bus = "SFX"
 	tree.root.add_child(player)
 	player.stream = create_stream(type)
