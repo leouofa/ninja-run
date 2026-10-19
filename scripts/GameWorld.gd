@@ -17,11 +17,17 @@ extends Node3D
 @onready var time_lbl: Label = $HUD/TopCenter/TimeLabel
 @onready var turn_prompt: Label = $HUD/CenterPrompt
 @onready var stumble_warning: Label = $HUD/StumbleWarning
-@onready var chrono_slots: HBoxContainer = $HUD/BottomLeft/ChronoSlots
-@onready var chrono_bar: ProgressBar = $HUD/BottomLeft/ChronoBar
+@onready var chrono_slots: HBoxContainer = $HUD/BottomLeft/VBox/ChronoSlots
+@onready var chrono_bar: ProgressBar = $HUD/BottomLeft/VBox/ChronoBar
+@onready var chrono_count_lbl: Label = $HUD/BottomLeft/VBox/Header/ChronoCountLabel
+@onready var chrono_lbl: Label = $HUD/BottomLeft/VBox/Header/ChronoLabel
 @onready var postfx_rect: ColorRect = $HUD/PsychedelicPostFX
 @onready var slowmo_vignette: ColorRect = $HUD/SlowmoVignette
 @onready var pause_menu: Control = $HUD/PauseMenu
+
+var orb_style_filled: StyleBoxFlat
+var orb_style_empty: StyleBoxFlat
+var _prev_chrono_count: int = -1
 
 # Victory & Game Over Screens
 @onready var victory_panel: PanelContainer = $HUD/VictoryPanel
@@ -69,6 +75,7 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	if is_inside_tree() and get_tree():
 		get_tree().paused = false
+	_setup_chrono_styles()
 	victory_panel.visible = false
 	game_over_panel.visible = false
 	turn_prompt.visible = false
@@ -396,11 +403,69 @@ func _update_chasing_spirits(delta: float) -> void:
 			sp.global_position = sp.global_position.lerp(target_pos, 10.0 * delta)
 			sp.look_at(player.global_position, Vector3.UP)
 
+func _setup_chrono_styles() -> void:
+	orb_style_filled = StyleBoxFlat.new()
+	orb_style_filled.bg_color = Color(0.0, 0.92, 1.0, 0.95)
+	orb_style_filled.border_width_left = 2
+	orb_style_filled.border_width_top = 2
+	orb_style_filled.border_width_right = 2
+	orb_style_filled.border_width_bottom = 2
+	orb_style_filled.border_color = Color(0.9, 1.0, 1.0, 1.0)
+	orb_style_filled.corner_radius_top_left = 6
+	orb_style_filled.corner_radius_top_right = 6
+	orb_style_filled.corner_radius_bottom_right = 6
+	orb_style_filled.corner_radius_bottom_left = 6
+	orb_style_filled.shadow_color = Color(0.0, 0.95, 1.0, 0.85)
+	orb_style_filled.shadow_size = 8
+
+	orb_style_empty = StyleBoxFlat.new()
+	orb_style_empty.bg_color = Color(0.06, 0.08, 0.14, 0.55)
+	orb_style_empty.border_width_left = 2
+	orb_style_empty.border_width_top = 2
+	orb_style_empty.border_width_right = 2
+	orb_style_empty.border_width_bottom = 2
+	orb_style_empty.border_color = Color(0.2, 0.6, 0.8, 0.5)
+	orb_style_empty.corner_radius_top_left = 6
+	orb_style_empty.corner_radius_top_right = 6
+	orb_style_empty.corner_radius_bottom_right = 6
+	orb_style_empty.corner_radius_bottom_left = 6
+
 func _update_chrono_ui(count: int) -> void:
+	if not chrono_slots:
+		return
+	if not orb_style_filled or not orb_style_empty:
+		_setup_chrono_styles()
+
+	var gained = _prev_chrono_count >= 0 and count > _prev_chrono_count
+	_prev_chrono_count = count
+
+	if chrono_count_lbl:
+		chrono_count_lbl.text = "[ %d / 3 ]" % count
+		if count > 0:
+			chrono_count_lbl.add_theme_color_override("font_color", Color(0.2, 1.0, 0.92, 1.0))
+		else:
+			chrono_count_lbl.add_theme_color_override("font_color", Color(0.7, 0.4, 0.4, 0.8))
+
+	if chrono_lbl:
+		if count > 0:
+			chrono_lbl.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0, 1.0))
+		else:
+			chrono_lbl.add_theme_color_override("font_color", Color(0.5, 0.55, 0.65, 0.6))
+
 	for i in range(chrono_slots.get_child_count()):
 		var orb = chrono_slots.get_child(i) as Control
-		if orb:
-			orb.modulate = Color(0.2, 0.9, 1.0, 1.0) if i < count else Color(0.2, 0.2, 0.3, 0.4)
+		if not orb:
+			continue
+		var is_filled = i < count
+		orb.add_theme_stylebox_override("panel", orb_style_filled if is_filled else orb_style_empty)
+		orb.modulate = Color.WHITE
+
+		# If this specific slot was just acquired, punch tween animation!
+		if gained and i == count - 1 and is_inside_tree():
+			orb.pivot_offset = orb.size * 0.5
+			var tw = create_tween()
+			orb.scale = Vector2(1.35, 1.35)
+			tw.tween_property(orb, "scale", Vector2(1.0, 1.0), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _on_enemy_slashed(_type: String, points: int) -> void:
 	yokai_slain += 1
