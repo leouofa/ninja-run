@@ -25,6 +25,18 @@ func _init() -> void:
 		print("[FAIL] Expected 36 levels, got:", gm.level_list.size())
 		failed += 1
 
+	# Test exported build (.remap / .import) track discovery
+	var remap_clean = gm._extract_mp3_filename("Armageddon.mp3.remap")
+	var import_clean = gm._extract_mp3_filename("Armageddon.mp3.import")
+	var direct_clean = gm._extract_mp3_filename("Armageddon.mp3")
+	var ds_store_clean = gm._extract_mp3_filename(".DS_Store")
+	if remap_clean == "Armageddon.mp3" and import_clean == "Armageddon.mp3" and direct_clean == "Armageddon.mp3" and ds_store_clean == "":
+		print("[PASS] Exported build (.remap/.import) track extraction verified.")
+		passed += 1
+	else:
+		print("[FAIL] Track extraction failed for exported filenames.")
+		failed += 1
+
 	# 2. Test Input Mappings for Space and F
 	var has_space = false
 	var has_f = false

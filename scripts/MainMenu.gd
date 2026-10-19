@@ -78,6 +78,12 @@ func _populate_levels() -> void:
 	if not gm:
 		return
 
+	if gm.level_list.is_empty():
+		if gm.has_method("_load_waveforms"):
+			gm._load_waveforms()
+		if gm.has_method("_build_level_list"):
+			gm._build_level_list()
+
 	var levels = gm.level_list
 	for i in range(levels.size()):
 		var item = levels[i]
@@ -205,6 +211,12 @@ func _populate_high_scores() -> void:
 	if not gm:
 		return
 
+	if gm.level_list.is_empty():
+		if gm.has_method("_load_waveforms"):
+			gm._load_waveforms()
+		if gm.has_method("_build_level_list"):
+			gm._build_level_list()
+
 	var levels = gm.level_list
 	for i in range(levels.size()):
 		var item = levels[i]
@@ -315,17 +327,33 @@ func _resume_bgm() -> void:
 func _init_bgm_playlist() -> void:
 	bgm_tracks.clear()
 	var gm = _get_gm()
-	if gm and gm.level_list.size() > 0:
-		for lvl in gm.level_list:
-			bgm_tracks.append(lvl["path"])
-	else:
+	if gm:
+		if gm.level_list.is_empty():
+			if gm.has_method("_load_waveforms"):
+				gm._load_waveforms()
+			if gm.has_method("_build_level_list"):
+				gm._build_level_list()
+		if gm.level_list.size() > 0:
+			for lvl in gm.level_list:
+				bgm_tracks.append(lvl["path"])
+		elif gm.has_method("_discover_track_files"):
+			for f in gm._discover_track_files():
+				bgm_tracks.append("res://tracks/" + f)
+
+	if bgm_tracks.is_empty():
 		var dir = DirAccess.open("res://tracks")
 		if dir:
 			dir.list_dir_begin()
 			var f = dir.get_next()
 			while f != "":
-				if not dir.current_is_dir() and f.to_lower().ends_with(".mp3"):
-					bgm_tracks.append("res://tracks/" + f)
+				if not dir.current_is_dir():
+					var clean_name = f
+					if clean_name.ends_with(".remap"):
+						clean_name = clean_name.trim_suffix(".remap")
+					elif clean_name.ends_with(".import"):
+						clean_name = clean_name.trim_suffix(".import")
+					if clean_name.to_lower().ends_with(".mp3"):
+						bgm_tracks.append("res://tracks/" + clean_name)
 				f = dir.get_next()
 			dir.list_dir_end()
 
@@ -409,6 +437,11 @@ func _on_campaign_pressed() -> void:
 	_stop_all_audio()
 	var gm = _get_gm()
 	if gm:
+		if gm.level_list.is_empty():
+			if gm.has_method("_load_waveforms"):
+				gm._load_waveforms()
+			if gm.has_method("_build_level_list"):
+				gm._build_level_list()
 		var unl_idx = gm.save_data.get("unlocked_campaign_index", 0)
 		gm.start_level_by_index(unl_idx)
 

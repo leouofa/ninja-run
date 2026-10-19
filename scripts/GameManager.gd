@@ -137,36 +137,83 @@ func _setup_audio_buses() -> void:
 		AudioServer.set_bus_name(sfx_idx, "SFX")
 
 func _load_waveforms() -> void:
+	if ResourceLoader.exists(WAVEFORMS_PATH):
+		var json_res = load(WAVEFORMS_PATH)
+		if json_res is JSON and json_res.data is Dictionary:
+			waveforms = json_res.data
+			return
 	if FileAccess.file_exists(WAVEFORMS_PATH):
 		var file = FileAccess.open(WAVEFORMS_PATH, FileAccess.READ)
-		var text = file.get_as_text()
-		var json = JSON.new()
-		if json.parse(text) == OK:
-			waveforms = json.data
+		if file:
+			var text = file.get_as_text()
+			var json = JSON.new()
+			if json.parse(text) == OK and json.data is Dictionary:
+				waveforms = json.data
 
-func _build_level_list() -> void:
-	level_list.clear()
+static func _extract_mp3_filename(entry_name: String) -> String:
+	var clean_name = entry_name
+	if clean_name.ends_with(".remap"):
+		clean_name = clean_name.trim_suffix(".remap")
+	elif clean_name.ends_with(".import"):
+		clean_name = clean_name.trim_suffix(".import")
+	if clean_name.to_lower().ends_with(".mp3"):
+		return clean_name
+	return ""
+
+func _discover_track_files() -> Array[String]:
+	var seen: Dictionary = {}
+	var result: Array[String] = []
+
+	if ResourceLoader.has_method("list_directory"):
+		var entries = ResourceLoader.list_directory("res://tracks")
+		for entry in entries:
+			var mp3_name = _extract_mp3_filename(str(entry))
+			if mp3_name != "" and not seen.has(mp3_name):
+				seen[mp3_name] = true
+				result.append(mp3_name)
+
 	var dir = DirAccess.open("res://tracks")
 	if dir:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
-			if not dir.current_is_dir() and file_name.to_lower().ends_with(".mp3"):
-				var wf = waveforms.get(file_name, {})
-				var duration = wf.get("duration", 180.0)
-				var difficulty = wf.get("difficulty", 3)
-				var beats = wf.get("beats", [])
-				level_list.append({
-					"filename": file_name,
-					"title": file_name.get_basename(),
-					"path": "res://tracks/" + file_name,
-					"duration": duration,
-					"difficulty": difficulty,
-					"beats_count": beats.size(),
-					"waveform": wf
-				})
+			if not dir.current_is_dir():
+				var mp3_name = _extract_mp3_filename(file_name)
+				if mp3_name != "" and not seen.has(mp3_name):
+					seen[mp3_name] = true
+					result.append(mp3_name)
 			file_name = dir.get_next()
 		dir.list_dir_end()
+
+	if not waveforms.is_empty():
+		for track_key in waveforms.keys():
+			var mp3_name = str(track_key)
+			if not mp3_name.to_lower().ends_with(".mp3"):
+				mp3_name += ".mp3"
+			var full_path = "res://tracks/" + mp3_name
+			if not seen.has(mp3_name) and (ResourceLoader.exists(full_path) or FileAccess.file_exists(full_path)):
+				seen[mp3_name] = true
+				result.append(mp3_name)
+
+	return result
+
+func _build_level_list() -> void:
+	level_list.clear()
+	var track_files = _discover_track_files()
+	for file_name in track_files:
+		var wf = waveforms.get(file_name, {})
+		var duration = wf.get("duration", 180.0)
+		var difficulty = wf.get("difficulty", 3)
+		var beats = wf.get("beats", [])
+		level_list.append({
+			"filename": file_name,
+			"title": file_name.get_basename(),
+			"path": "res://tracks/" + file_name,
+			"duration": duration,
+			"difficulty": difficulty,
+			"beats_count": beats.size(),
+			"waveform": wf
+		})
 
 	# Sort levels by duration and difficulty for campaign flow
 	level_list.sort_custom(func(a, b):
@@ -192,6 +239,8 @@ func get_waveform_for_track(track_name: String) -> Dictionary:
 	}
 
 func start_level_by_name(track_name: String) -> void:
+	if level_list.is_empty():
+		_build_level_list()
 	current_track_name = track_name
 	for i in range(level_list.size()):
 		if level_list[i]["filename"] == track_name:
@@ -201,6 +250,8 @@ func start_level_by_name(track_name: String) -> void:
 	get_tree().change_scene_to_file("res://scenes/GameWorld.tscn")
 
 func start_level_by_index(idx: int) -> void:
+	if level_list.is_empty():
+		_build_level_list()
 	if idx >= 0 and idx < level_list.size():
 		current_level_index = idx
 		current_track_name = level_list[idx]["filename"]
