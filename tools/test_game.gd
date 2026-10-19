@@ -409,6 +409,50 @@ func _init() -> void:
 		])
 		failed += 1
 
+	# 15. Test Strict Red-Threat vs Gold/Cyan-Reward Color Separation & Ground Markers
+	var test_slow = Pickup.new()
+	test_slow.pickup_type = "slowdown"
+	root.add_child(test_slow)
+	test_slow._ready()
+
+	var test_tengu = EnemyBase.new()
+	test_tengu.enemy_type = "tengu"
+	root.add_child(test_tengu)
+	test_tengu._ready()
+
+	var test_gate = Obstacle.new()
+	test_gate.obstacle_type = "high_gate"
+	root.add_child(test_gate)
+	test_gate._ready()
+
+	var coin_emit: Color = test_coin.shader_mat.get_shader_parameter("emission_color")
+	var coin_sec: Color = test_coin.shader_mat.get_shader_parameter("secondary_color")
+	var slow_emit: Color = test_slow.shader_mat.get_shader_parameter("emission_color")
+	var oni_emit: Color = test_enemy.shader_mat.get_shader_parameter("emission_color")
+	var tengu_emit: Color = test_tengu.shader_mat.get_shader_parameter("emission_color")
+	var bar_emit: Color = test_obs.shader_mat.get_shader_parameter("emission_color")
+	var gate_emit: Color = test_gate.shader_mat.get_shader_parameter("emission_color")
+
+	# Items: Coin is Gold (R>0.8, G>0.7, Sec G>0.8, Sec R<0.7 - zero red/pink); Slowdown is Cyan (B>0.8, G>0.8, R<0.3)
+	var items_ok = (coin_emit.r > 0.8 and coin_emit.g > 0.7 and coin_sec.g > 0.8 and coin_sec.r < 0.7) and (slow_emit.b > 0.8 and slow_emit.g > 0.8 and slow_emit.r < 0.3)
+	# Threats: Enemies and Obstacles are strictly Red/Crimson dominant (R>0.9 and R > G * 2.5)
+	var threats_ok = (oni_emit.r > 0.9 and oni_emit.r > oni_emit.g * 2.5) and (tengu_emit.r > 0.9 and tengu_emit.r > tengu_emit.g * 2.5) and (bar_emit.r > 0.9 and bar_emit.r > bar_emit.g * 2.5) and (gate_emit.r > 0.9 and gate_emit.r > gate_emit.g * 2.5)
+	# Ground markers: Enemy has X-crosshair blades, Obstacle has dual hazard rails
+	var enemy_crosshair_ok = (test_enemy.ground_ring.get_child_count() >= 2) and (test_tengu.ground_ring.get_child_count() >= 2)
+	var obs_hazard_rails_ok = (test_obs.ground_marker.get_child_count() >= 2) and (test_gate.ground_marker.get_child_count() >= 2)
+
+	if items_ok and threats_ok and enemy_crosshair_ok and obs_hazard_rails_ok:
+		print("[PASS] Strict Threat vs. Reward Color Hierarchy verified: Threats strictly in Red danger spectrum, Items strictly in Gold/Cyan, with distinct Crosshair & Hazard-rail ground markers.")
+		passed += 1
+	else:
+		print("[FAIL] Color Hierarchy mismatch: items_ok=%s, threats_ok=%s, crosshairs=%s, rails=%s" % [
+			items_ok, threats_ok, enemy_crosshair_ok, obs_hazard_rails_ok
+		])
+		failed += 1
+
+	test_slow.queue_free()
+	test_tengu.queue_free()
+	test_gate.queue_free()
 	test_coin.queue_free()
 	test_enemy.queue_free()
 	test_obs.queue_free()

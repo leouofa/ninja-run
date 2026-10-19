@@ -61,35 +61,33 @@ func _setup_psychedelic_shader() -> void:
 	shader_mat = ShaderMaterial.new()
 	shader_mat.shader = shader
 	shader_mat.set_shader_parameter("pattern_mode", 1) # Scrolling Plasma Veins
-	shader_mat.set_shader_parameter("pattern_speed", 3.0)
-	shader_mat.set_shader_parameter("pattern_scale", 3.5)
-	shader_mat.set_shader_parameter("rim_power", 2.2)
-	shader_mat.set_shader_parameter("rim_boost", 2.8)
+	shader_mat.set_shader_parameter("pattern_speed", 2.8)
+	shader_mat.set_shader_parameter("pattern_scale", 4.0)
 
 	if is_fatal or enemy_type in ["oni", "samurai"]:
-		# Fatal heavy brute: Crimson & Molten Orange
-		shader_mat.set_shader_parameter("albedo_color", Color(0.08, 0.02, 0.03))
-		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.12, 0.22))
-		shader_mat.set_shader_parameter("secondary_color", Color(1.0, 0.62, 0.05))
-		shader_mat.set_shader_parameter("emission_energy", 5.2)
+		# Fatal heavy brute: Deep Blood-Crimson & Hellfire Red-Orange
+		shader_mat.set_shader_parameter("albedo_color", Color(0.04, 0.01, 0.01))
+		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.04, 0.06))
+		shader_mat.set_shader_parameter("secondary_color", Color(1.0, 0.32, 0.02))
+		shader_mat.set_shader_parameter("emission_energy", 4.6)
+		shader_mat.set_shader_parameter("rim_power", 2.6)
+		shader_mat.set_shader_parameter("rim_boost", 2.8)
 	elif enemy_type == "tengu":
-		# Aerial swooper: Acid Lime & Neon Violet
-		shader_mat.set_shader_parameter("albedo_color", Color(0.04, 0.02, 0.07))
-		shader_mat.set_shader_parameter("emission_color", Color(0.35, 1.0, 0.25))
-		shader_mat.set_shader_parameter("secondary_color", Color(0.85, 0.15, 0.95))
-		shader_mat.set_shader_parameter("emission_energy", 4.8)
-	elif enemy_type == "witch":
-		# Witch: Hot Magenta & Electric Cyan
-		shader_mat.set_shader_parameter("albedo_color", Color(0.06, 0.02, 0.07))
-		shader_mat.set_shader_parameter("emission_color", Color(0.95, 0.15, 0.85))
-		shader_mat.set_shader_parameter("secondary_color", Color(0.2, 0.85, 1.0))
-		shader_mat.set_shader_parameter("emission_energy", 4.8)
+		# Aerial swooper: Laser Crimson & Scarlet-Magenta
+		shader_mat.set_shader_parameter("albedo_color", Color(0.04, 0.01, 0.02))
+		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.06, 0.14))
+		shader_mat.set_shader_parameter("secondary_color", Color(1.0, 0.12, 0.42))
+		shader_mat.set_shader_parameter("emission_energy", 4.4)
+		shader_mat.set_shader_parameter("rim_power", 2.8)
+		shader_mat.set_shader_parameter("rim_boost", 2.5)
 	else:
-		# Spirit / Skeleton / Lantern: Cyber-Violet & Ghost Cyan
-		shader_mat.set_shader_parameter("albedo_color", Color(0.03, 0.04, 0.08))
-		shader_mat.set_shader_parameter("emission_color", Color(0.2, 0.85, 1.0))
-		shader_mat.set_shader_parameter("secondary_color", Color(0.75, 0.25, 1.0))
-		shader_mat.set_shader_parameter("emission_energy", 4.5)
+		# Standard slashable Yōkai (spirit, skeleton, witch, lantern): Neon Scarlet Red & Hot Blood-Magenta
+		shader_mat.set_shader_parameter("albedo_color", Color(0.04, 0.01, 0.02))
+		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.08, 0.16))
+		shader_mat.set_shader_parameter("secondary_color", Color(1.0, 0.06, 0.38))
+		shader_mat.set_shader_parameter("emission_energy", 4.4)
+		shader_mat.set_shader_parameter("rim_power", 2.8)
+		shader_mat.set_shader_parameter("rim_boost", 2.5)
 
 	if visual_mesh:
 		_apply_material_recursive(visual_mesh, shader_mat)
@@ -101,22 +99,35 @@ func _apply_material_recursive(node: Node, mat: Material) -> void:
 		_apply_material_recursive(child, mat)
 
 func _setup_ground_ring() -> void:
+	# Ground threat marker: Red ring + X-Crosshair blades on the track floor
 	ground_ring = MeshInstance3D.new()
 	var torus = TorusMesh.new()
 	var is_heavy = is_fatal or enemy_type in ["oni", "samurai"]
-	torus.inner_radius = 0.85 if is_heavy else 0.65
-	torus.outer_radius = 1.05 if is_heavy else 0.82
+	torus.inner_radius = 0.85 if is_heavy else 0.68
+	torus.outer_radius = 1.05 if is_heavy else 0.86
 	ground_ring.mesh = torus
-	ground_ring.position = Vector3(0, 0.04 - position.y, 0) # Anchored on the track floor even if enemy hovers
+	ground_ring.position = Vector3(0, 0.04 - position.y, 0) # Anchored on the track floor
 
 	var ring_mat = StandardMaterial3D.new()
 	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var col = Color(1.0, 0.15, 0.15) if is_heavy else (Color(0.3, 1.0, 0.3) if enemy_type == "tengu" else Color(0.25, 0.85, 1.0))
+	var col = Color(1.0, 0.04, 0.06) if is_heavy else Color(1.0, 0.08, 0.14)
 	ring_mat.albedo_color = col
 	ring_mat.emission_enabled = true
 	ring_mat.emission = col
-	ring_mat.emission_energy_multiplier = 3.2
+	ring_mat.emission_energy_multiplier = 3.4
 	ground_ring.material_override = ring_mat
+
+	# Crossed diagonal blades forming an unmistakable Red Target Crosshair
+	var cross_len = (torus.inner_radius * 1.8)
+	for angle in [45.0, -45.0]:
+		var blade = MeshInstance3D.new()
+		var b_mesh = BoxMesh.new()
+		b_mesh.size = Vector3(cross_len, 0.01, 0.08)
+		blade.mesh = b_mesh
+		blade.rotation_degrees.y = angle
+		blade.material_override = ring_mat
+		ground_ring.add_child(blade)
+
 	add_child(ground_ring)
 
 func update_audio_reactivity(bass: float, drop: float, chrono: float) -> void:

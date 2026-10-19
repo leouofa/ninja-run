@@ -266,11 +266,31 @@ func _update_reactive_background(delta: float) -> void:
 func _setup_chasing_spirits() -> void:
 	var spirit_scene = load("res://assets/models/enemy_spirit.glb")
 	if spirit_scene:
+		var shader = load("res://shaders/psychedelic_entity.gdshader")
+		var ghost_mat: ShaderMaterial = null
+		if shader:
+			ghost_mat = ShaderMaterial.new()
+			ghost_mat.shader = shader
+			ghost_mat.set_shader_parameter("pattern_mode", 1)
+			ghost_mat.set_shader_parameter("albedo_color", Color(0.04, 0.01, 0.02))
+			ghost_mat.set_shader_parameter("emission_color", Color(1.0, 0.08, 0.16))
+			ghost_mat.set_shader_parameter("secondary_color", Color(1.0, 0.12, 0.42))
+			ghost_mat.set_shader_parameter("emission_energy", 3.8)
+			ghost_mat.set_shader_parameter("rim_power", 2.5)
+
 		for i in range(3):
 			var sp = spirit_scene.instantiate()
 			sp.visible = false
+			if ghost_mat:
+				_apply_ghost_mat_recursive(sp, ghost_mat)
 			add_child(sp)
 			chasing_spirits.append(sp)
+
+func _apply_ghost_mat_recursive(node: Node, mat: Material) -> void:
+	if node is MeshInstance3D:
+		node.material_override = mat
+	for child in node.get_children():
+		_apply_ghost_mat_recursive(child, mat)
 
 func _input(event: InputEvent) -> void:
 	if game_ended:

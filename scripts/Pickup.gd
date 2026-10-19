@@ -46,14 +46,14 @@ func _setup_psychedelic_shader() -> void:
 	shader_mat.set_shader_parameter("pattern_mode", 0) # Iridescent Shimmer
 
 	if pickup_type == "slowdown":
-		shader_mat.set_shader_parameter("albedo_color", Color(0.04, 0.08, 0.15))
-		shader_mat.set_shader_parameter("emission_color", Color(0.2, 0.95, 1.0))
-		shader_mat.set_shader_parameter("secondary_color", Color(0.85, 0.25, 1.0))
-		shader_mat.set_shader_parameter("emission_energy", 5.5)
+		shader_mat.set_shader_parameter("albedo_color", Color(0.02, 0.06, 0.12))
+		shader_mat.set_shader_parameter("emission_color", Color(0.10, 0.95, 1.0))
+		shader_mat.set_shader_parameter("secondary_color", Color(0.70, 0.95, 1.0)) # Pure Ice-White/Cyan
+		shader_mat.set_shader_parameter("emission_energy", 5.2)
 	else:
-		shader_mat.set_shader_parameter("albedo_color", Color(0.12, 0.08, 0.02))
-		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.85, 0.18))
-		shader_mat.set_shader_parameter("secondary_color", Color(1.0, 0.18, 0.65))
+		shader_mat.set_shader_parameter("albedo_color", Color(0.12, 0.09, 0.02))
+		shader_mat.set_shader_parameter("emission_color", Color(1.0, 0.88, 0.12)) # Pure Solar Gold
+		shader_mat.set_shader_parameter("secondary_color", Color(0.55, 1.0, 0.45)) # Emerald/Mint Gold (Zero pink/red)
 		shader_mat.set_shader_parameter("emission_energy", 4.8)
 
 	shader_mat.set_shader_parameter("rim_power", 2.0)
@@ -82,32 +82,32 @@ func _setup_contrast_halo() -> void:
 
 	var halo_mat = StandardMaterial3D.new()
 	halo_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var rim_col = Color(1.0, 0.8, 0.2) if pickup_type == "koban" else Color(0.2, 0.9, 1.0)
+	var rim_col = Color(1.0, 0.85, 0.18) if pickup_type == "koban" else Color(0.2, 0.95, 1.0)
 	halo_mat.albedo_color = rim_col
 	halo_mat.emission_enabled = true
 	halo_mat.emission = rim_col
-	halo_mat.emission_energy_multiplier = 2.0
+	halo_mat.emission_energy_multiplier = 2.2
 	contrast_halo.material_override = halo_mat
 
 	if visual_mesh:
 		visual_mesh.add_child(contrast_halo)
 
 func _setup_ground_beacon() -> void:
-	# Glowing ground ring on the dark track floor directly beneath the pickup
+	# Compact glowing circular ground ring on the dark track floor
 	ground_ring = MeshInstance3D.new()
 	var ring_mesh = TorusMesh.new()
-	ring_mesh.inner_radius = 0.55
-	ring_mesh.outer_radius = 0.72
+	ring_mesh.inner_radius = 0.42
+	ring_mesh.outer_radius = 0.58
 	ground_ring.mesh = ring_mesh
 	ground_ring.position = Vector3(0, 0.04, 0) # Just above track surface
 
 	var ring_mat = StandardMaterial3D.new()
 	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var emit_col = Color(1.0, 0.75, 0.15) if pickup_type == "koban" else Color(0.15, 0.9, 1.0)
+	var emit_col = Color(1.0, 0.85, 0.15) if pickup_type == "koban" else Color(0.15, 0.95, 1.0)
 	ring_mat.albedo_color = emit_col
 	ring_mat.emission_enabled = true
 	ring_mat.emission = emit_col
-	ring_mat.emission_energy_multiplier = 3.5
+	ring_mat.emission_energy_multiplier = 3.2
 	ground_ring.material_override = ring_mat
 	add_child(ground_ring)
 
