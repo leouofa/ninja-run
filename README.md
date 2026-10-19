@@ -13,6 +13,7 @@
 ---
 
 ## 📑 Table of Contents
+
 - [Architecture & Systems Overview](#-architecture--systems-overview)
 - [Audio-Driven Procedural Level Generation](#-audio-driven-procedural-level-generation)
 - [Custom Shaders & Visual Effects Pipeline](#-custom-shaders--visual-effects-pipeline)
@@ -57,6 +58,7 @@ flowchart TD
 ```
 
 ### Core Technologies
+
 - **Engine**: Godot Engine 4.7 (Forward+ Vulkan / Direct3D 12 backend with ACES HDR bloom and glow).
 - **Physics**: Jolt Physics 3D integration with continuous collision detection and custom kinematic lane interpolators.
 - **Data Ingestion**: Python 3.10+ / FFmpeg audio energy extractor calculating root-mean-square (RMS) and sub-bass transients at 100 ms intervals.
@@ -88,13 +90,16 @@ sequenceDiagram
 ```
 
 ### 1. Offline Signal Processing (`tools/extract_waveforms.py`)
+
 Audio tracks are decoded into mono 8000 Hz 16-bit signed PCM streams via FFmpeg and bucketed into 100 ms (10 Hz) slices:
+
 - **RMS Energy ($E_{\text{rms}}$)**: Measures overall track loudness to govern enemy population density and track elevation.
 - **Sub-Bass Energy ($E_{\text{bass}}$)**: High-pass and low-pass windowed sample deltas identifying heavy kick drums and 808 basslines.
 - **Transient Energy ($E_{\text{high}}$)**: Captures snare hits and hi-hats for rhythmic hazard activation.
 - **Deterministic Seeding**: Generates a 64-bit integer hash from track audio data ensuring identical procedural track layouts for any given song.
 
 ### 2. Runtime Roadway & Junction Construction (`scripts/WaveformTrackGenerator.gd`)
+
 - **Metric Mapping**: With a baseline runner speed $v = 18.0\text{ m/s}$ and segment length $L = 24.0\text{ m}$, each segment represents exactly $1.333\text{ seconds}$ of music.
 - **Dynamic Branching & 90° Turns**: When a beat drops or low-frequency energy exceeds threshold ($E_{\text{bass}} > 0.6$), the generator spawns a `TurnZone`. High RMS moments ($E_{\text{rms}} > 0.7$) trigger T-junctions offering split branching paths.
 - **Lane Width & Safe Corridors**: Standardized $3.6\text{ m}$ lane widths ($12.4\text{ m}$ total road width) with guaranteed $1.8\text{ m}$ clear air margins around obstacles (`obstacle_barricade.glb`, `obstacle_high_gate.glb`), verified across all framerates.
@@ -132,6 +137,7 @@ graph LR
 Applied as a fullscreen `CanvasItem` screen-reading shader over the 3D viewport.
 
 #### Concentric Bass Ripple Waves
+
 Expanding acoustic shockwaves distort screen UVs radiating outward from screen center during bass drops:
 
 $$\Delta \mathbf{uv} = \frac{\mathbf{uv} - \mathbf{c}}{\|\mathbf{uv} - \mathbf{c}\|} \cdot \sin\Big(28 \|\mathbf{uv} - \mathbf{c}\| - t(6 + 4 E_{\text{bass}})\Big) \cdot \Big(0.003 E_{\text{bass}} + 0.005 I_{\text{drop}}\Big)$$
@@ -147,6 +153,7 @@ if (dist_from_center > 0.001) {
 ```
 
 #### Radial Chromatic Aberration
+
 Separates R and B channels along radial vectors $\mathbf{d} = \frac{\mathbf{uv} - \mathbf{c}}{\|\mathbf{uv} - \mathbf{c}\|}$, scaling non-linearly with edge distance and player combo:
 
 $$\text{CA} = \Big(\text{base} + 0.005 E_{\text{bass}} + 0.009 I_{\text{drop}} + 0.005 R_{\text{combo}} + 0.007 B_{\text{chrono}}\Big) \cdot \big(1.45 \|\mathbf{uv} - \mathbf{c}\|\big)^{1.7}$$
@@ -158,7 +165,9 @@ float col_b = texture(screen_texture, ripple_uv - ca_dir * total_ca).b;
 ```
 
 #### Chrono-Focus Time-Warp Screen Tone
+
 When the player engages time-dilation, $B_{\text{chrono}}$ smoothly interpolates the viewport into an icy cyan desaturated palette with a dark peripheral vignette:
+
 ```glsl
 if (chrono_blend > 0.01) {
     float luma = dot(col, vec3(0.299, 0.587, 0.114));
@@ -174,13 +183,16 @@ if (chrono_blend > 0.01) {
 ### 2. Audio-Reactive Roadway Shader (`shaders/psychedelic_track.gdshader`)
 
 Renders the multi-lane roadway using distance fields in local model coordinates:
-- **Lane Dividers**: Analytical distance to $x = \pm \frac{\text{lane\_width}}{2}$ ($x = \pm 1.8\text{ m}$) creates crisp, anti-aliased dashed neon markings without texture seams.
+
+- **Lane Dividers**: Analytical distance to lane boundaries $x = \pm \frac{W}{2} = \pm 1.8\text{ m}$ (for uniform `lane_width = 3.6`) creates crisp, anti-aliased dashed neon markings without texture seams.
 - **Audio Scrolling**: Dash frequency accelerates with bass energy:
+
   ```glsl
   float dash_z = lz + t * scroll_speed * (0.8 + bass_energy * 0.4);
   float dash_mod = mod(dash_z, 5.0);
   float dash_mask = smoothstep(0.2, 0.4, dash_mod) * smoothstep(4.8, 4.6, dash_mod);
   ```
+
 - **Transversal Synthwave Grid**: High-frequency grid pulses rendered across the track deck reacting to low-frequency beats.
 
 ---
@@ -188,12 +200,15 @@ Renders the multi-lane roadway using distance fields in local model coordinates:
 ### 3. Dynamic Entity Shader (`shaders/psychedelic_entity.gdshader`)
 
 Entities (Yokai enemies, obstacles, and pickups) utilize a unified spatial shader featuring three distinct operating modes:
+
 1. `pattern_mode = 0`: **Iridescent Shimmer** (Koban coins, Chrono hourglass pickups)
 2. `pattern_mode = 1`: **Scrolling Plasma Veins** (Yōkai enemies: Oni, Tengu, Samurai, Witch, Skeleton, Spirit, Lantern)
 3. `pattern_mode = 2`: **Hazard Chevrons / Runes** (Barricades & High Gates)
 
 #### Strict Threat vs. Reward Color Hierarchy
+
 To maintain split-second gameplay clarity at high speed:
+
 - **Threats (Enemies & Hazards)**: Strictly rendered in crimson red, vermilion orange, and dark obsidian cores. Slashed by katana or dodged.
 - **Rewards (Koban & Time Pickups)**: Strictly rendered in luminous gold (`#FFD700`) and cyan electric glow (`#00FFFF`).
 - **Fresnel Rim**: High-power rim lighting makes silhouettes immediately identifiable against dark synthwave horizons:
@@ -212,19 +227,24 @@ To maintain split-second gameplay clarity at high speed:
 ## ⚙️ Physics & Gameplay Mechanics
 
 ### 1. Framerate-Independent Kinematic Movement (`scripts/PlayerNinja.gd`)
+
 - Continuous forward momentum ($v = 18.0\text{ m/s}$) combined with exponential dampening for horizontal lane switches:
   $$x(t) = \text{lerp}(x, x_{\text{target}}, 1.0 - e^{-\lambda \Delta t})$$
 - Verified for zero lane drift across 30, 60, 120, and 144 FPS in automated test suites.
 
 ### 2. Chrono-Focus Time Dilation (`scripts/ChronoController.gd`)
+
 - Slows global physics engine time scale to `0.45` while preserving player response agility:
+
   ```gdscript
   Engine.time_scale = 0.45
   AudioServer.playback_speed_scale = 0.45
   ```
+
 - Dynamic shader uniforms smoothly lerp from `0.0` to `1.0` during activation to blend visual and auditory time warp effects.
 
 ### 3. QTE Bezier Auto-Steering (`scripts/TurnZone.gd`)
+
 - Detects entry into 90° corner zones; player executes a timed turn input (left/right arrow, `A`/`D`, or gamepad).
 - Smoothly steers the runner onto the orthogonal track axis via quadratic Bezier interpolation without camera disorientations.
 
@@ -274,6 +294,7 @@ ninja-run/
 ## 🚀 Developer Quickstart & Tooling
 
 ### Prerequisites
+
 - [Godot Engine 4.7+](https://godotengine.org/download) with Forward+ / Vulkan support.
 - [Python 3.10+](https://www.python.org/) with `ffmpeg` installed (for audio waveform extraction).
 - [Blender 3.6+](https://www.blender.org/) (optional, only needed for regenerating 3D models).
@@ -281,6 +302,7 @@ ninja-run/
 ---
 
 ### Running the Headless Engine Test Suite
+
 Ninja Run includes an automated test runner validating game systems without launching a display server:
 
 ```bash
@@ -288,6 +310,7 @@ godot --headless -s tools/test_game.gd
 ```
 
 **Verification Checklist executed by `test_game.gd`:**
+
 ```
 === RUNNING AUTOMATED GAME ENGINE TESTS ===
 [PASS] All 36 soundtrack levels loaded successfully.
@@ -314,16 +337,19 @@ ALL SYSTEMS OPERATIONAL!
 ---
 
 ### Offline Waveform Extraction
+
 To extract audio envelopes from new soundtrack files placed in `tracks/`:
 
 ```bash
 python3 tools/extract_waveforms.py
 ```
+
 *Outputs updated `data/waveforms.json` with 10 Hz RMS, sub-bass, high transient arrays, and SHA-256 deterministic seeds.*
 
 ---
 
 ### Procedural 3D Asset Generation
+
 All 14 in-game 3D models (`assets/models/*.glb`) are generated programmatically via Blender's Python API:
 
 ```bash
@@ -337,6 +363,7 @@ blender -b -P tools/generate_blender_assets.py
 This project operates under a **Dual-License** structure:
 
 ### 1. Game Engine Code, Shaders, Scripts & Assets: MIT License
+
 All software code, GDScript files, GLSL shaders, Python pipelines, scene structures, and procedural 3D model assets are licensed under the open-source **[MIT License](LICENSE)**.
 
 ```
@@ -346,6 +373,7 @@ Copyright (c) 2026 Leonid Medovyy (https://github.com/leouofa)
 You are free to use, modify, distribute, and integrate the engine code, shaders, and procedural pipelines into personal or commercial projects under the terms of the MIT License.
 
 ### 2. Original Soundtrack & Music: Proprietary (All Rights Reserved)
+
 All 36 original music compositions and `.mp3` audio recordings in the [`tracks/`](tracks/) directory are proprietary intellectual property:
 
 ```
@@ -358,6 +386,6 @@ Copyright (c) 2026 Leonid Medovyy. All Rights Reserved.
 ---
 
 ### Author & Attribution
+
 Developed and designed by **Leonid Medovyy**  
 GitHub: [@leouofa](https://github.com/leouofa)  
-Email: [leonid@macron1.io](mailto:leonid@macron1.io)
