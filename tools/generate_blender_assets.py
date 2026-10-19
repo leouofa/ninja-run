@@ -484,21 +484,21 @@ def build_high_gate():
 
 def build_pickup_slowdown():
     reset_scene()
-    m_cyan_glow = create_material("M_ChronoCyan", (0.1, 0.9, 1.0, 1.0), emission_color=(0.2, 0.9, 1.0, 1.0), emission_strength=5.0)
-    m_gold_ring = create_material("M_ChronoRing", (0.9, 0.8, 0.3, 1.0), metallic=0.9, roughness=0.2)
+    m_cyan_glow = create_material("M_ChronoCyan", (0.1, 0.9, 1.0, 1.0), emission_color=(0.2, 0.9, 1.0, 1.0), emission_strength=6.0)
+    m_gold_ring = create_material("M_ChronoRing", (0.9, 0.8, 0.3, 1.0), metallic=0.9, roughness=0.2, emission_color=(1.0, 0.85, 0.2, 1.0), emission_strength=2.0)
 
-    # Central Magatama / Hourglass Crystal
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.22, location=(0, 0, 1.0))
+    # Central Magatama / Hourglass Crystal centered at local origin (0, 0, 0)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.26, location=(0, 0, 0))
     core = bpy.context.active_object
     core.scale = (0.7, 0.7, 1.4)
     assign_material(core, m_cyan_glow)
 
     # Rotating Golden Astrolabe Rings
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.38, minor_radius=0.03, location=(0, 0, 1.0))
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.44, minor_radius=0.03, location=(0, 0, 0))
     ring1 = bpy.context.active_object
     assign_material(ring1, m_gold_ring)
 
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.48, minor_radius=0.025, location=(0, 0, 1.0))
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.54, minor_radius=0.025, location=(0, 0, 0))
     ring2 = bpy.context.active_object
     ring2.rotation_euler = (math.radians(60), math.radians(30), 0)
     assign_material(ring2, m_gold_ring)
@@ -507,13 +507,21 @@ def build_pickup_slowdown():
 
 def build_pickup_koban():
     reset_scene()
-    m_gold = create_material("M_KobanGold", (0.95, 0.82, 0.2, 1.0), metallic=0.95, roughness=0.15)
+    m_gold = create_material("M_KobanGold", (0.98, 0.85, 0.22, 1.0), metallic=0.9, roughness=0.15, emission_color=(1.0, 0.82, 0.15, 1.0), emission_strength=4.5)
 
-    # Edo Koban Oval Coin
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=0.04, location=(0, 0, 0.9))
+    # Edo Koban Oval Coin standing upright facing the player, centered at local origin
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.36, depth=0.08, location=(0, 0, 0))
     coin = bpy.context.active_object
-    coin.scale = (0.7, 1.3, 1.0)
+    coin.rotation_euler = (math.radians(90), 0, 0)
+    coin.scale = (0.75, 1.0, 1.25)
     assign_material(coin, m_gold)
+
+    # Outer raised rim for depth and specularity
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.34, minor_radius=0.03, location=(0, 0, 0))
+    rim = bpy.context.active_object
+    rim.rotation_euler = (math.radians(90), 0, 0)
+    rim.scale = (0.75, 1.0, 1.25)
+    assign_material(rim, m_gold)
 
     export_glb("pickup_koban.glb")
 

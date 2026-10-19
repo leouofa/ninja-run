@@ -19,6 +19,7 @@ extends Node3D
 @onready var stumble_warning: Label = $HUD/StumbleWarning
 @onready var chrono_slots: HBoxContainer = $HUD/BottomLeft/ChronoSlots
 @onready var chrono_bar: ProgressBar = $HUD/BottomLeft/ChronoBar
+@onready var postfx_rect: ColorRect = $HUD/PsychedelicPostFX
 @onready var slowmo_vignette: ColorRect = $HUD/SlowmoVignette
 
 # Victory & Game Over Screens
@@ -247,7 +248,17 @@ func _update_reactive_background(delta: float) -> void:
 		var pri_col: Color = track_palette.get("grid_primary_color", Color(0.0, 0.9, 1.0))
 		var chrono_fog = Color(0.03, 0.22, 0.38)
 		world_env.environment.fog_light_color = base_fog.lerp(pri_col * 0.45, cur_drop * 0.35).lerp(chrono_fog, cur_chrono * 0.8)
-		world_env.environment.glow_bloom = 0.22 + cur_bass * 0.12 + cur_drop * 0.12
+		world_env.environment.glow_bloom = 0.35 + cur_bass * 0.15 + cur_drop * 0.15
+
+	if postfx_rect and postfx_rect.material is ShaderMaterial:
+		var pfx_mat = postfx_rect.material as ShaderMaterial
+		pfx_mat.set_shader_parameter("bass_energy", cur_bass)
+		pfx_mat.set_shader_parameter("mid_energy", cur_mid)
+		pfx_mat.set_shader_parameter("high_energy", cur_high)
+		pfx_mat.set_shader_parameter("drop_intensity", cur_drop)
+		pfx_mat.set_shader_parameter("chrono_blend", cur_chrono)
+		var combo_ratio = clampf(float(combo - 1) / 7.0, 0.0, 1.0)
+		pfx_mat.set_shader_parameter("combo_ratio", combo_ratio)
 
 	if track_gen:
 		track_gen.update_audio_reactivity(cur_bass, cur_drop, cur_chrono)
@@ -255,11 +266,31 @@ func _update_reactive_background(delta: float) -> void:
 func _setup_chasing_spirits() -> void:
 	var spirit_scene = load("res://assets/models/enemy_spirit.glb")
 	if spirit_scene:
+		var shader = load("res://shaders/psychedelic_entity.gdshader")
+		var ghost_mat: ShaderMaterial = null
+		if shader:
+			ghost_mat = ShaderMaterial.new()
+			ghost_mat.shader = shader
+			ghost_mat.set_shader_parameter("pattern_mode", 1)
+			ghost_mat.set_shader_parameter("albedo_color", Color(0.04, 0.01, 0.02))
+			ghost_mat.set_shader_parameter("emission_color", Color(1.0, 0.08, 0.16))
+			ghost_mat.set_shader_parameter("secondary_color", Color(1.0, 0.12, 0.42))
+			ghost_mat.set_shader_parameter("emission_energy", 3.8)
+			ghost_mat.set_shader_parameter("rim_power", 2.5)
+
 		for i in range(3):
 			var sp = spirit_scene.instantiate()
 			sp.visible = false
+			if ghost_mat:
+				_apply_ghost_mat_recursive(sp, ghost_mat)
 			add_child(sp)
 			chasing_spirits.append(sp)
+
+func _apply_ghost_mat_recursive(node: Node, mat: Material) -> void:
+	if node is MeshInstance3D:
+		node.material_override = mat
+	for child in node.get_children():
+		_apply_ghost_mat_recursive(child, mat)
 
 func _input(event: InputEvent) -> void:
 	if game_ended:

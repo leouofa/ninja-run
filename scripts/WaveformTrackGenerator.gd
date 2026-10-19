@@ -18,7 +18,7 @@ var turn_zones: Array[TurnZone] = []
 var active_turn_indices: Array[int] = []
 
 # Materials for procedural walkway
-var mat_wood: StandardMaterial3D
+var mat_wood: Material
 var mat_stone: StandardMaterial3D
 var mat_lantern_glow: StandardMaterial3D
 var base_curb_emission: Color = Color(0.0, 0.9, 1.0)
@@ -27,49 +27,69 @@ func _ready() -> void:
 	_init_materials()
 
 func _init_materials() -> void:
-	mat_wood = StandardMaterial3D.new()
-	mat_wood.albedo_color = Color(0.20, 0.14, 0.12)
-	mat_wood.roughness = 0.62
-	mat_wood.metallic = 0.12
+	var track_shader = load("res://shaders/psychedelic_track.gdshader")
+	if track_shader:
+		var sm = ShaderMaterial.new()
+		sm.shader = track_shader
+		sm.set_shader_parameter("lane_width", LANE_WIDTH)
+		sm.set_shader_parameter("floor_color", Color(0.03, 0.03, 0.06, 1.0))
+		sm.set_shader_parameter("lane_line_color", Color(0.0, 0.92, 1.0, 1.0))
+		sm.set_shader_parameter("accent_line_color", Color(1.0, 0.12, 0.65, 1.0))
+		sm.set_shader_parameter("grid_tint_color", Color(0.12, 0.06, 0.22, 1.0))
+		mat_wood = sm
+	else:
+		var std = StandardMaterial3D.new()
+		std.albedo_color = Color(0.04, 0.04, 0.08)
+		std.roughness = 0.3
+		mat_wood = std
 
 	mat_stone = StandardMaterial3D.new()
-	mat_stone.albedo_color = Color(0.32, 0.34, 0.40)
-	mat_stone.roughness = 0.55
-	mat_stone.metallic = 0.25
+	mat_stone.albedo_color = Color(0.14, 0.15, 0.22)
+	mat_stone.roughness = 0.4
+	mat_stone.metallic = 0.3
 	mat_stone.emission_enabled = true
 	mat_stone.emission = base_curb_emission
-	mat_stone.emission_energy_multiplier = 0.45
+	mat_stone.emission_energy_multiplier = 0.7
 
 	mat_lantern_glow = StandardMaterial3D.new()
 	mat_lantern_glow.albedo_color = Color(1.0, 0.7, 0.2)
 	mat_lantern_glow.emission_enabled = true
 	mat_lantern_glow.emission = Color(1.0, 0.6, 0.1)
-	mat_lantern_glow.emission_energy_multiplier = 3.0
+	mat_lantern_glow.emission_energy_multiplier = 3.5
 
 func apply_track_palette(palette: Dictionary) -> void:
 	if not mat_wood or not mat_stone or not mat_lantern_glow:
 		_init_materials()
 
 	var curb_col: Color = palette.get("curb_accent_color", Color(0.0, 0.9, 1.0))
+	var pri_col: Color = palette.get("grid_primary_color", Color(0.0, 0.95, 1.0))
+	var sec_col: Color = palette.get("grid_secondary_color", Color(1.0, 0.12, 0.65))
 	var sky_hor: Color = palette.get("sky_horizon_color", Color(0.25, 0.08, 0.3))
 	var sun_top: Color = palette.get("sun_top_color", Color(1.0, 0.85, 0.2))
 
 	base_curb_emission = curb_col
-	mat_stone.albedo_color = Color(0.22, 0.22, 0.28).lerp(curb_col, 0.25)
+	mat_stone.albedo_color = Color(0.12, 0.12, 0.18).lerp(curb_col, 0.25)
 	mat_stone.emission = base_curb_emission
-	mat_stone.emission_energy_multiplier = 0.55
+	mat_stone.emission_energy_multiplier = 0.75
 
-	mat_wood.albedo_color = Color(0.18, 0.12, 0.10).lerp(sky_hor, 0.22)
+	if mat_wood is ShaderMaterial:
+		mat_wood.set_shader_parameter("lane_line_color", pri_col)
+		mat_wood.set_shader_parameter("accent_line_color", sec_col)
+		mat_wood.set_shader_parameter("grid_tint_color", sky_hor * 0.7)
 
 	mat_lantern_glow.albedo_color = sun_top
 	mat_lantern_glow.emission = sun_top
 
 func update_audio_reactivity(bass: float, drop: float, chrono: float) -> void:
-	if not mat_stone:
-		return
-	var chrono_col = Color(0.35, 0.95, 1.0)
-	mat_stone.emission = base_curb_emission.lerp(chrono_col, chrono * 0.85)
-	mat_stone.emission_energy_multiplier = 0.35 + bass * 0.85 + drop * 0.65 + chrono * 0.4
+	if mat_stone:
+		var chrono_col = Color(0.35, 0.95, 1.0)
+		mat_stone.emission = base_curb_emission.lerp(chrono_col, chrono * 0.85)
+		mat_stone.emission_energy_multiplier = 0.45 + bass * 0.95 + drop * 0.75 + chrono * 0.4
+
+	if mat_wood is ShaderMaterial:
+		mat_wood.set_shader_parameter("bass_energy", bass)
+		mat_wood.set_shader_parameter("drop_intensity", drop)
+		mat_wood.set_shader_parameter("chrono_blend", chrono)
 
 func build_track_for_level(level_dict: Dictionary) -> void:
 	_clear_track()
