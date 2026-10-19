@@ -13,6 +13,7 @@ const SLOWDOWN_REAL_DURATION: float = 4.0 # 4 real-time seconds
 var charges: int = 1
 var is_slowed: bool = false
 var slowdown_start_time_msec: int = 0
+var _paused_at_msec: int = 0
 var music_player: AudioStreamPlayer = null
 var lowpass_filter: AudioEffectLowPassFilter = null
 
@@ -57,7 +58,18 @@ func activate_slowdown() -> bool:
 	emit_signal("slowdown_started", SLOWDOWN_REAL_DURATION)
 	return true
 
+func set_paused(paused: bool) -> void:
+	if paused:
+		_paused_at_msec = Time.get_ticks_msec()
+	else:
+		if _paused_at_msec > 0:
+			var pause_duration = Time.get_ticks_msec() - _paused_at_msec
+			slowdown_start_time_msec += pause_duration
+			_paused_at_msec = 0
+
 func _process(_delta: float) -> void:
+	if is_inside_tree() and get_tree().paused:
+		return
 	if is_slowed:
 		var elapsed_real = (Time.get_ticks_msec() - slowdown_start_time_msec) / 1000.0
 		if elapsed_real >= SLOWDOWN_REAL_DURATION:
