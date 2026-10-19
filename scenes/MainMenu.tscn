@@ -1,12 +1,27 @@
-[gd_scene load_steps=4 format=3 uid="uid://b23v8j1o5d3re"]
+[gd_scene format=3 uid="uid://b23v8j1o5d3re"]
 
-[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_menu"]
-[ext_resource type="Shader" path="res://shaders/synthwave_background.gdshader" id="2_shader"]
+[ext_resource type="Script" uid="uid://b505faridn115" path="res://scripts/MainMenu.gd" id="1_menu"]
+[ext_resource type="Shader" uid="uid://cy75ldkvhfyms" path="res://shaders/synthwave_background.gdshader" id="2_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_synthwave"]
 shader = ExtResource("2_shader")
+shader_parameter/sky_top_color = Color(0.04, 0.02, 0.1, 1)
+shader_parameter/sky_bottom_color = Color(0.32, 0.06, 0.34, 1)
+shader_parameter/sun_top_color = Color(1, 0.92, 0.25, 1)
+shader_parameter/sun_bottom_color = Color(1, 0.08, 0.55, 1)
+shader_parameter/grid_line_color = Color(0, 0.95, 1, 1)
+shader_parameter/grid_horizon_color = Color(1, 0.12, 0.65, 1)
+shader_parameter/mountain_color = Color(0.08, 0.04, 0.16, 1)
+shader_parameter/mountain_rim_color = Color(0, 0.92, 1, 1)
+shader_parameter/horizon_y = 0.53
+shader_parameter/sun_radius = 0.21
+shader_parameter/grid_speed = 0.55
+shader_parameter/bass_energy = 0.0
+shader_parameter/mid_energy = 0.0
+shader_parameter/high_energy = 0.0
+shader_parameter/time_val = 0.0
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1684502944]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,7 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=551050177]
 material = SubResource("ShaderMaterial_synthwave")
 layout_mode = 1
 anchors_preset = 15
@@ -24,13 +39,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
-bus = &"Music"
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="." unique_id=900849528]
 
-[node name="AudioPreviewPlayer" type="AudioStreamPlayer" parent="."]
-bus = &"Music"
+[node name="AudioPreviewPlayer" type="AudioStreamPlayer" parent="." unique_id=365977712]
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1031372981]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -42,12 +55,12 @@ theme_override_constants/margin_top = 40
 theme_override_constants/margin_right = 60
 theme_override_constants/margin_bottom = 40
 
-[node name="TitleScreen" type="VBoxContainer" parent="MarginContainer"]
+[node name="TitleScreen" type="VBoxContainer" parent="MarginContainer" unique_id=1637286234]
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="Title" type="Label" parent="MarginContainer/TitleScreen"]
+[node name="Title" type="Label" parent="MarginContainer/TitleScreen" unique_id=187492864]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.2, 0.2, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
@@ -57,54 +70,54 @@ theme_override_font_sizes/font_size = 54
 text = "NINJA RUN"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="MarginContainer/TitleScreen"]
+[node name="Subtitle" type="Label" parent="MarginContainer/TitleScreen" unique_id=1907780376]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 24
 text = "SHADOWS OF YŌKAI • 妖魔の影"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="MarginContainer/TitleScreen"]
+[node name="Spacer" type="Control" parent="MarginContainer/TitleScreen" unique_id=641800051]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 
-[node name="CampaignBtn" type="Button" parent="MarginContainer/TitleScreen"]
+[node name="CampaignBtn" type="Button" parent="MarginContainer/TitleScreen" unique_id=697319206]
 custom_minimum_size = Vector2(280, 55)
 layout_mode = 2
-mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 20
 text = "Play Campaign"
 
-[node name="LevelSelectBtn" type="Button" parent="MarginContainer/TitleScreen"]
+[node name="LevelSelectBtn" type="Button" parent="MarginContainer/TitleScreen" unique_id=1222717714]
 custom_minimum_size = Vector2(280, 50)
 layout_mode = 2
-mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 18
 text = "Select Level"
 
-[node name="HighScoresBtn" type="Button" parent="MarginContainer/TitleScreen"]
+[node name="HighScoresBtn" type="Button" parent="MarginContainer/TitleScreen" unique_id=530453294]
 custom_minimum_size = Vector2(280, 50)
 layout_mode = 2
-mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 18
 text = "High Scores"
 
-[node name="ExitBtn" type="Button" parent="MarginContainer/TitleScreen"]
+[node name="ExitBtn" type="Button" parent="MarginContainer/TitleScreen" unique_id=2031197096]
 custom_minimum_size = Vector2(280, 50)
 layout_mode = 2
-mouse_default_cursor_shape = 2
 size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 18
 text = "Exit Game"
 
-[node name="Spacer2" type="Control" parent="MarginContainer/TitleScreen"]
+[node name="Spacer2" type="Control" parent="MarginContainer/TitleScreen" unique_id=1206553763]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 
-[node name="ControlsLegend" type="Label" parent="MarginContainer/TitleScreen"]
+[node name="ControlsLegend" type="Label" parent="MarginContainer/TitleScreen" unique_id=1138037405]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.7, 0.75, 1)
 theme_override_font_sizes/font_size = 14
@@ -112,21 +125,21 @@ text = "Controls: A/D or Left/Right to Switch Lanes & Turn • W/Up to Jump • 
 Space or F to Katana Slash (Destroys All Yōkai!) • Shift for Chrono-Focus (Slows Time & Music)"
 horizontal_alignment = 1
 
-[node name="LevelSelectScreen" type="VBoxContainer" parent="MarginContainer"]
+[node name="LevelSelectScreen" type="VBoxContainer" parent="MarginContainer" unique_id=141558148]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="Header" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen"]
+[node name="Header" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen" unique_id=1589155052]
 layout_mode = 2
 
-[node name="BackBtn" type="Button" parent="MarginContainer/LevelSelectScreen/Header"]
+[node name="BackBtn" type="Button" parent="MarginContainer/LevelSelectScreen/Header" unique_id=231584478]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "Back"
 
-[node name="HeaderTitle" type="Label" parent="MarginContainer/LevelSelectScreen/Header"]
+[node name="HeaderTitle" type="Label" parent="MarginContainer/LevelSelectScreen/Header" unique_id=1479418327]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
@@ -134,21 +147,21 @@ theme_override_font_sizes/font_size = 26
 text = "SELECT SOUNDTRACK LEVEL"
 horizontal_alignment = 1
 
-[node name="TopSpacer" type="Control" parent="MarginContainer/LevelSelectScreen"]
+[node name="TopSpacer" type="Control" parent="MarginContainer/LevelSelectScreen" unique_id=1159633917]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/LevelSelectScreen"]
+[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/LevelSelectScreen" unique_id=472834701]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBox" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen/TableHeaders"]
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/LevelSelectScreen/TableHeaders" unique_id=618733316]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 15
 
-[node name="ColTrack" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColTrack" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=260089025]
 custom_minimum_size = Vector2(200, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -158,7 +171,7 @@ theme_override_font_sizes/font_size = 13
 text = "TRACK"
 vertical_alignment = 1
 
-[node name="ColTime" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColTime" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=1196387827]
 custom_minimum_size = Vector2(60, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -168,17 +181,16 @@ theme_override_font_sizes/font_size = 13
 text = "TIME"
 vertical_alignment = 1
 
-[node name="ColDiff" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColDiff" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=1007471819]
 custom_minimum_size = Vector2(75, 32)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
 theme_override_font_sizes/font_size = 13
 text = "DIFFICULTY"
 vertical_alignment = 1
 
-[node name="ColRecord" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColRecord" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=575122335]
 custom_minimum_size = Vector2(90, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -188,7 +200,7 @@ theme_override_font_sizes/font_size = 13
 text = "RECORD"
 vertical_alignment = 1
 
-[node name="ColWaveform" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColWaveform" type="Label" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=143673559]
 custom_minimum_size = Vector2(100, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -198,37 +210,37 @@ theme_override_font_sizes/font_size = 13
 text = "ENERGY"
 vertical_alignment = 1
 
-[node name="ColActions" type="Control" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox"]
+[node name="ColActions" type="Control" parent="MarginContainer/LevelSelectScreen/TableHeaders/HBox" unique_id=26612766]
 custom_minimum_size = Vector2(130, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.8
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/LevelSelectScreen"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/LevelSelectScreen" unique_id=192700192]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="LevelList" type="VBoxContainer" parent="MarginContainer/LevelSelectScreen/ScrollContainer"]
+[node name="LevelList" type="VBoxContainer" parent="MarginContainer/LevelSelectScreen/ScrollContainer" unique_id=968361980]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="HighScoresScreen" type="VBoxContainer" parent="MarginContainer"]
+[node name="HighScoresScreen" type="VBoxContainer" parent="MarginContainer" unique_id=1701309794]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="Header" type="HBoxContainer" parent="MarginContainer/HighScoresScreen"]
+[node name="Header" type="HBoxContainer" parent="MarginContainer/HighScoresScreen" unique_id=263565114]
 layout_mode = 2
 
-[node name="BackBtn" type="Button" parent="MarginContainer/HighScoresScreen/Header"]
+[node name="BackBtn" type="Button" parent="MarginContainer/HighScoresScreen/Header" unique_id=429889841]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "Back"
 
-[node name="HeaderTitle" type="Label" parent="MarginContainer/HighScoresScreen/Header"]
+[node name="HeaderTitle" type="Label" parent="MarginContainer/HighScoresScreen/Header" unique_id=158441158]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
@@ -236,21 +248,21 @@ theme_override_font_sizes/font_size = 26
 text = "HIGH SCORES & RECORDS"
 horizontal_alignment = 1
 
-[node name="TopSpacer" type="Control" parent="MarginContainer/HighScoresScreen"]
+[node name="TopSpacer" type="Control" parent="MarginContainer/HighScoresScreen" unique_id=1783876005]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/HighScoresScreen"]
+[node name="TableHeaders" type="PanelContainer" parent="MarginContainer/HighScoresScreen" unique_id=1419808303]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBox" type="HBoxContainer" parent="MarginContainer/HighScoresScreen/TableHeaders"]
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/HighScoresScreen/TableHeaders" unique_id=1889689344]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 15
 
-[node name="ColTrack" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+[node name="ColTrack" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox" unique_id=1560828180]
 custom_minimum_size = Vector2(250, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -260,17 +272,16 @@ theme_override_font_sizes/font_size = 13
 text = "TRACK"
 vertical_alignment = 1
 
-[node name="ColTime" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+[node name="ColTime" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox" unique_id=1476593474]
 custom_minimum_size = Vector2(65, 32)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 0.85)
 theme_override_font_sizes/font_size = 13
 text = "TIME"
 vertical_alignment = 1
 
-[node name="ColScore" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+[node name="ColScore" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox" unique_id=1743542213]
 custom_minimum_size = Vector2(110, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -280,7 +291,7 @@ theme_override_font_sizes/font_size = 13
 text = "HIGH SCORE"
 vertical_alignment = 1
 
-[node name="ColKills" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+[node name="ColKills" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox" unique_id=1590619251]
 custom_minimum_size = Vector2(95, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -290,7 +301,7 @@ theme_override_font_sizes/font_size = 13
 text = "MAX KILLS"
 vertical_alignment = 1
 
-[node name="ColStatus" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox"]
+[node name="ColStatus" type="Label" parent="MarginContainer/HighScoresScreen/TableHeaders/HBox" unique_id=1087904273]
 custom_minimum_size = Vector2(120, 32)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -300,12 +311,12 @@ theme_override_font_sizes/font_size = 13
 text = "STATUS"
 vertical_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HighScoresScreen"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HighScoresScreen" unique_id=177948838]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="HighScoreList" type="VBoxContainer" parent="MarginContainer/HighScoresScreen/ScrollContainer"]
+[node name="HighScoreList" type="VBoxContainer" parent="MarginContainer/HighScoresScreen/ScrollContainer" unique_id=307477089]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8

@@ -85,6 +85,11 @@ func _ready() -> void:
 	# Setup current level
 	var gm = _get_gm()
 	if gm:
+		if gm.level_list.is_empty():
+			if gm.has_method("_load_waveforms"):
+				gm._load_waveforms()
+			if gm.has_method("_build_level_list"):
+				gm._build_level_list()
 		track_name = gm.current_track_name
 		if track_name.is_empty() and gm.level_list.size() > 0:
 			track_name = gm.level_list[0]["filename"]
